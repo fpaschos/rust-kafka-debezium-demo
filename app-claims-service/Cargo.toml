@@ -1,0 +1,13 @@
+[package]
+name = "app-claims-service"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+anyhow = "1.0.72"
+serde = { version = "1.0.177", features = ["derive"] }
+serde_json = "1.0.104"
+sqlx = { version = "0.7.1", features = ["postgres", "json", "runtime-tokio"] }
+tokio = { version = "1.29.1", features = ["rt-multi-thread", "macros"] }
