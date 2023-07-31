@@ -1,7 +1,11 @@
 mod config;
 
+use std::net::SocketAddr;
 use sqlx::postgres::PgPoolOptions;
 use anyhow::Context;
+use axum::response::Html;
+use axum::{Router, ServiceExt};
+use axum::routing::get;
 use serde::{Deserialize, Serialize};
 use sqlx::PgPool;
 use sqlx::types::Json;
@@ -20,7 +24,7 @@ struct Party {
 }
 
 async fn insert_claim(db: &PgPool, involved: Party) -> anyhow::Result<i64> {
-    let c: (i64,) = sqlx::query_as(r#"INSERT INTO claim (involved) VALUES ($1) RETURNING id"#)
+    let c: (i64, ) = sqlx::query_as(r#"INSERT INTO claim (involved) VALUES ($1) RETURNING id"#)
         .bind(Json(involved))
         .fetch_one(db)
         .await?;
@@ -35,12 +39,11 @@ async fn fetch_claims(db: &PgPool) -> anyhow::Result<Vec<ClaimDb>> {
     Ok(cs)
 }
 
+// 1) TODO tracing
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
+    let config = config::load(&"./config/application.yml").context("Unable to load config")?;
 
-    let config = config::load(&"./config/application.yml")?;
-
-    // TODO 1) config and parameters
     let db = PgPoolOptions::new()
         .max_connections(5)
         .connect(&config.db.url)
@@ -51,6 +54,9 @@ async fn main() -> anyhow::Result<()> {
         .run(&db)
         .await
         .context("Unable to exec db migrations")?;
+
+
+    start_web_server(&config.server).await.context("Unable to start web server")?;
 
     // Just check the database connection
     // Make a simple query to return the given parameter (use a question mark `?` instead of `$1` for MySQL)
@@ -76,3 +82,23 @@ async fn main() -> anyhow::Result<()> {
 
     Ok(())
 }
+
+/// Starts the web server given a config [`config::Server`]
+pub async fn start_web_server(config: &config::Server) -> anyhow::Result<()> {
+    // Start server
+    let addr = SocketAddr::from(([0, 0, 0, 0], config.port));
+
+    let app = Router::new().route("/", get(handle));
+    axum::Server::bind(&addr)
+        .serve(app.into_make_service())
+        // .with_graceful_shutdown(shutdown_signal(shutdown_handles))
+        .await?;
+
+    Ok(())
+}
+
+async fn handle() -> Html<&'static str> {
+    Html("Ok")
+}
+
+fn init_routing() {}
