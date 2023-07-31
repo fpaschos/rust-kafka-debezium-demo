@@ -1,3 +1,5 @@
+mod config;
+
 use sqlx::postgres::PgPoolOptions;
 use anyhow::Context;
 use serde::{Deserialize, Serialize};
@@ -26,17 +28,22 @@ async fn insert_claim(db: &PgPool, involved: Party) -> anyhow::Result<i64> {
     Ok(c.0)
 }
 
-async fn list_claims(db: &PgPool) -> anyhow::Result<()> {
-    Ok(())
+async fn fetch_claims(db: &PgPool) -> anyhow::Result<Vec<ClaimDb>> {
+    let cs: Vec<ClaimDb> = sqlx::query_as(r#"SELECT id, involved FROM claim"#)
+        .fetch_all(db)
+        .await?;
+    Ok(cs)
 }
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
 
+    let config = config::load(&"./config/application.yml")?;
+
     // TODO 1) config and parameters
     let db = PgPoolOptions::new()
         .max_connections(5)
-        .connect("postgres://postgres:postgres@localhost:5432/claimsdb")
+        .connect(&config.db.url)
         .await
         .context("Unable to connect to database")?;
 
@@ -60,9 +67,12 @@ async fn main() -> anyhow::Result<()> {
     };
 
 
+    // Insert a new claim
+    // Fetch all claims
     let new_id = insert_claim(&db, involved).await?;
     println!("Claim with id = {new_id} inserted");
-    list_claims(&db).await?;
+    let claims = fetch_claims(&db).await?;
+    println!("Claims found = {}", claims.len());
 
     Ok(())
 }
