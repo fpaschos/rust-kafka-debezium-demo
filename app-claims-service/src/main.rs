@@ -1,14 +1,17 @@
-mod config;
-
 use std::net::SocketAddr;
-use sqlx::postgres::PgPoolOptions;
+
 use anyhow::Context;
+use axum::Router;
 use axum::response::Html;
-use axum::{Router, ServiceExt};
 use axum::routing::get;
 use serde::{Deserialize, Serialize};
 use sqlx::PgPool;
+use sqlx::postgres::PgPoolOptions;
 use sqlx::types::Json;
+use tracing_subscriber::prelude::__tracing_subscriber_SubscriberExt;
+
+mod config;
+mod common;
 
 #[derive(sqlx::FromRow)]
 struct ClaimDb {
@@ -39,10 +42,12 @@ async fn fetch_claims(db: &PgPool) -> anyhow::Result<Vec<ClaimDb>> {
     Ok(cs)
 }
 
-// 1) TODO tracing
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
     let config = config::load(&"./config/application.yml").context("Unable to load config")?;
+    setup_tracing(&config.log)?;
+
+
 
     let db = PgPoolOptions::new()
         .max_connections(5)
@@ -76,11 +81,20 @@ async fn main() -> anyhow::Result<()> {
     // Insert a new claim
     // Fetch all claims
     let new_id = insert_claim(&db, involved).await?;
-    println!("Claim with id = {new_id} inserted");
+    tracing::debug!("Claim with id = {new_id} inserted");
     let claims = fetch_claims(&db).await?;
-    println!("Claims found = {}", claims.len());
+    tracing::debug!("Claims found = {}", claims.len());
 
     Ok(())
+}
+
+pub fn setup_tracing(_config: &config::Log) -> anyhow::Result<()> {
+    let fmt_layer = tracing_subscriber::fmt::layer().json();
+    let subscriber = tracing_subscriber::registry()
+        .with(fmt_layer);
+    tracing::subscriber::set_global_default(subscriber)?;
+    Ok(())
+
 }
 
 /// Starts the web server given a config [`config::Server`]
@@ -89,9 +103,11 @@ pub async fn start_web_server(config: &config::Server) -> anyhow::Result<()> {
     let addr = SocketAddr::from(([0, 0, 0, 0], config.port));
 
     let app = Router::new().route("/", get(handle));
+
+    tracing::info!("Rest server listening on {addr}");
     axum::Server::bind(&addr)
         .serve(app.into_make_service())
-        // .with_graceful_shutdown(shutdown_signal(shutdown_handles))
+         .with_graceful_shutdown(common::server::shutdown_signal())
         .await?;
 
     Ok(())

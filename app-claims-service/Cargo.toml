@@ -12,4 +12,6 @@ config = { version = "0.13.3", features = ["yaml"] }
 serde = { version = "1.0.177", features = ["derive"] }
 serde_json = { version = "1.0.104", features = ["raw_value"] }
 sqlx = { version = "0.7.1", features = ["postgres", "json", "runtime-tokio"] }
-tokio = { version = "1.29.1", features = ["rt-multi-thread", "macros"] }
+tokio = { version = "1.29.1", features = ["rt-multi-thread", "macros", "signal"] }
+tracing = "0.1.37"
+tracing-subscriber = { version = "0.3.17", features = ["env-filter", "fmt", "json"] }
