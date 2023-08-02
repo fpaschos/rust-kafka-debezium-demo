@@ -2,7 +2,6 @@ use std::net::SocketAddr;
 
 use anyhow::Context;
 use axum::Router;
-use axum::response::Html;
 use axum::routing::get;
 use serde::{Deserialize, Serialize};
 use sqlx::PgPool;
@@ -61,7 +60,7 @@ async fn main() -> anyhow::Result<()> {
         .context("Unable to exec db migrations")?;
 
 
-    start_web_server(&config.server).await.context("Unable to start web server")?;
+    start_rest_server(&config.server).await.context("Unable to start web server")?;
 
     // Just check the database connection
     // Make a simple query to return the given parameter (use a question mark `?` instead of `$1` for MySQL)
@@ -98,7 +97,7 @@ pub fn setup_tracing(_config: &config::Log) -> anyhow::Result<()> {
 }
 
 /// Starts the web server given a config [`config::Server`]
-pub async fn start_web_server(config: &config::Server) -> anyhow::Result<()> {
+pub async fn start_rest_server(config: &config::Server) -> anyhow::Result<()> {
     // Start server
     let addr = SocketAddr::from(([0, 0, 0, 0], config.port));
 
@@ -113,8 +112,8 @@ pub async fn start_web_server(config: &config::Server) -> anyhow::Result<()> {
     Ok(())
 }
 
-async fn handle() -> Html<&'static str> {
-    Html("Ok")
+async fn handle() -> &'static str {
+    "Ok"
 }
 
 fn init_routing() {}
