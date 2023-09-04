@@ -3,27 +3,18 @@ use std::net::SocketAddr;
 use anyhow::Context;
 use axum::Router;
 use axum::routing::get;
-use serde::{Deserialize, Serialize};
 use sqlx::PgPool;
 use sqlx::postgres::PgPoolOptions;
 use sqlx::types::Json;
 use tracing_subscriber::prelude::__tracing_subscriber_SubscriberExt;
+use crate::model::{ClaimDb, Party};
 
 mod config;
 mod common;
+mod model;
+mod db;
+mod service;
 
-#[derive(sqlx::FromRow)]
-struct ClaimDb {
-    id: i64,
-    involved: Json<Party>,
-}
-
-#[derive(Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-struct Party {
-    first_name: String,
-    last_name: String,
-}
 
 async fn insert_claim(db: &PgPool, involved: Party) -> anyhow::Result<i64> {
     let c: (i64, ) = sqlx::query_as(r#"INSERT INTO claim (involved) VALUES ($1) RETURNING id"#)
