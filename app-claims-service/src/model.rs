@@ -1,4 +1,3 @@
-use std::convert::Infallible;
 use serde::{Deserialize, Serialize};
 use sqlx::types::Json;
 
@@ -9,11 +8,17 @@ pub struct ClaimDb {
     pub involved: Json<Party>,
 }
 
+impl ClaimDb {
+    pub fn new(involved: Party) -> Self {
+        Self { id: 0, involved: Json(involved) }
+    }
+}
+
 impl TryFrom<ClaimDb> for Claim {
-    type Error = Infallible;
+    type Error = anyhow::Error;
 
     fn try_from(value: ClaimDb) -> Result<Self, Self::Error> {
-        let ClaimDb{id, involved} = value;
+        let ClaimDb { id, involved } = value;
         Ok(Claim {
             id,
             involved: involved.0,

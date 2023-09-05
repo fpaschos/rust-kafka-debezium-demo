@@ -7,6 +7,7 @@ use crate::model::ClaimDb;
 //  - https://github.com/govinda-attal/app-a/blob/main/src/db/functions.rs
 //  - https://github.com/launchbadge/sqlx/blob/main/examples/postgres/transaction/src/main.rs#L3-
 
+#[allow(unused)]
 pub async fn fetch_claims(con: impl Executor<'_, Database=Postgres>) -> anyhow::Result<Vec<ClaimDb>> {
     let rows: Vec<ClaimDb> = sqlx::query_as(r#"SELECT id, involved FROM claim"#)
         .fetch_all(con)
@@ -15,6 +16,7 @@ pub async fn fetch_claims(con: impl Executor<'_, Database=Postgres>) -> anyhow::
     Ok(rows)
 }
 
+#[allow(unused)]
 pub async fn fetch_claim(con: impl Executor<'_, Database=Postgres>, id: i64) -> anyhow::Result<Option<ClaimDb>> {
     let row: Option<ClaimDb> = sqlx::query_as(r#"SELECT * FROM claim WHERE id = $1"#)
         .bind(id)
@@ -23,6 +25,7 @@ pub async fn fetch_claim(con: impl Executor<'_, Database=Postgres>, id: i64) -> 
 
     Ok(row)
 }
+
 
 pub async fn create_claim(tx: &mut Transaction<'_, Postgres>, c: ClaimDb) -> anyhow::Result<ClaimDb> {
     let row = sqlx::query_as::<_, ClaimDb>(
@@ -37,6 +40,7 @@ pub async fn create_claim(tx: &mut Transaction<'_, Postgres>, c: ClaimDb) -> any
     Ok(row)
 }
 
+#[allow(unused)]
 pub async fn update_claim(tx: &mut Transaction<'_, Postgres>, c: ClaimDb) -> anyhow::Result<ClaimDb> {
     let row = sqlx::query_as::<_, ClaimDb>(
         r#"UPDATE claim SET involved = $1 WHERE id = $2 RETURNING *"#,
