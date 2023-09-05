@@ -4,16 +4,15 @@ use anyhow::Context;
 use axum::Router;
 use axum::routing::get;
 use sqlx::postgres::PgPoolOptions;
-use sqlx::types::Json;
 use tracing_subscriber::prelude::__tracing_subscriber_SubscriberExt;
-use crate::db::{create_claim, fetch_claims};
-use crate::model::{ClaimDb, Party};
+use crate::common::api::health;
 
 mod config;
 mod common;
 mod model;
 mod db;
 mod service;
+mod api;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
@@ -32,8 +31,11 @@ async fn main() -> anyhow::Result<()> {
         .context("Unable to exec db migrations")?;
 
 
-    start_rest_server(&config.server).await.context("Unable to start web server")?;
+    start_web_server(&config.server).await.context("Unable to start web server")?;
 
+    Ok(())
+}
+/*
     // Just check the database connection
     // Make a simple query to return the given parameter (use a question mark `?` instead of `$1` for MySQL)
     let row: (i64, ) = sqlx::query_as("SELECT $1")
@@ -70,8 +72,9 @@ async fn main() -> anyhow::Result<()> {
     let claims = fetch_claims(&db).await?;
     tracing::debug!("Claims found = {}", claims.len());
 
-    Ok(())
 }
+
+ */
 
 pub fn setup_tracing(_config: &config::Log) -> anyhow::Result<()> {
     let fmt_layer = tracing_subscriber::fmt::layer().json();
@@ -83,23 +86,26 @@ pub fn setup_tracing(_config: &config::Log) -> anyhow::Result<()> {
 }
 
 /// Starts the web server given a config [`config::Server`]
-pub async fn start_rest_server(config: &config::Server) -> anyhow::Result<()> {
+pub async fn start_web_server(config: &config::Server) -> anyhow::Result<()> {
+    // Initialize routing
+    let routing = init_routing();
+
     // Start server
     let addr = SocketAddr::from(([0, 0, 0, 0], config.port));
-
-    let app = Router::new().route("/", get(handle));
-
     tracing::info!("Rest server listening on {addr}");
     axum::Server::bind(&addr)
-        .serve(app.into_make_service())
+        .serve(routing.into_make_service_with_connect_info::<SocketAddr>())
          .with_graceful_shutdown(common::server::shutdown_signal())
         .await?;
 
     Ok(())
 }
 
-async fn handle() -> &'static str {
-    "Ok"
-}
+/// Merge all routers
+fn init_routing() -> Router {
+    let base_router = Router::new().route("/health", get(health));
 
-fn init_routing() {}
+    let rest_router = api::rest::routing::init();
+
+    base_router.merge(rest_router)
+}
