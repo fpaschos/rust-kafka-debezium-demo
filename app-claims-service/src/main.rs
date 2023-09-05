@@ -3,10 +3,10 @@ use std::net::SocketAddr;
 use anyhow::Context;
 use axum::Router;
 use axum::routing::get;
-use sqlx::PgPool;
 use sqlx::postgres::PgPoolOptions;
 use sqlx::types::Json;
 use tracing_subscriber::prelude::__tracing_subscriber_SubscriberExt;
+use crate::db::{create_claim, fetch_claims};
 use crate::model::{ClaimDb, Party};
 
 mod config;
@@ -15,29 +15,10 @@ mod model;
 mod db;
 mod service;
 
-
-async fn insert_claim(db: &PgPool, involved: Party) -> anyhow::Result<i64> {
-    let c: (i64, ) = sqlx::query_as(r#"INSERT INTO claim (involved) VALUES ($1) RETURNING id"#)
-        .bind(Json(involved))
-        .fetch_one(db)
-        .await?;
-
-    Ok(c.0)
-}
-
-async fn fetch_claims(db: &PgPool) -> anyhow::Result<Vec<ClaimDb>> {
-    let cs: Vec<ClaimDb> = sqlx::query_as(r#"SELECT id, involved FROM claim"#)
-        .fetch_all(db)
-        .await?;
-    Ok(cs)
-}
-
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
     let config = config::load(&"./config/application.yml").context("Unable to load config")?;
     setup_tracing(&config.log)?;
-
-
 
     let db = PgPoolOptions::new()
         .max_connections(5)
@@ -66,12 +47,26 @@ async fn main() -> anyhow::Result<()> {
         first_name: "Foo".into(),
         last_name: "Bar".into(),
     };
+    let claim = ClaimDb {
+        id: 0,
+        involved: Json(involved),
+    };
 
 
+    // Try transaction
     // Insert a new claim
     // Fetch all claims
-    let new_id = insert_claim(&db, involved).await?;
-    tracing::debug!("Claim with id = {new_id} inserted");
+    // Revert
+    // Fetch all claims
+    {
+        let mut tx = db.begin().await?;
+        let claim  = create_claim(&mut tx,  claim).await?;
+        tracing::debug!("Claim with id = {} inserted", claim.id);
+        let claims = fetch_claims(&mut *tx).await?;
+
+        tracing::debug!("Claims found = {}", claims.len());
+        tracing::debug!("Rolling back transaction");
+    }
     let claims = fetch_claims(&db).await?;
     tracing::debug!("Claims found = {}", claims.len());
 
