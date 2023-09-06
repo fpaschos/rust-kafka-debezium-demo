@@ -12,6 +12,7 @@ config = { version = "0.13.3", features = ["yaml"] }
 serde = { version = "1.0.188", features = ["derive"] }
 serde_json = { version = "1.0.105", features = ["raw_value"] }
 sqlx = { version = "0.7.1", features = ["postgres", "json", "runtime-tokio"] }
+strum = { version = "0.25.0", features = ["derive"] }
 tokio = { version = "1.32.0", features = ["rt-multi-thread", "macros", "signal"] }
 tracing = "0.1.37"
 tracing-subscriber = { version = "0.3.17", features = ["env-filter", "fmt", "json"] }
