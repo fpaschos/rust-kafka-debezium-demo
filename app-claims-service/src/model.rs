@@ -37,8 +37,9 @@ pub enum ClaimStatus {
     #[default]
     Open,
     Closed,
-    CannotAccess
+    UnderRevision,
 }
+
 
 // API Common Model
 #[derive(Serialize, Deserialize)]

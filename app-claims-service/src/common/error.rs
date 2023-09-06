@@ -9,8 +9,15 @@ use serde_json::json;
 // TODO Display
 #[derive(Clone, Debug)]
 pub enum AppError {
+    DbError(DbError),
     UnhandledDbError(Arc<sqlx::Error>),
     Unhandled(Arc<anyhow::Error>),
+}
+
+#[derive(Clone, Copy, Debug)]
+pub enum DbError {
+    NotFound,
+    Conflict,
 }
 
 impl From<sqlx::Error> for AppError {
@@ -114,7 +121,18 @@ pub fn match_error(error: &AppError) -> (&str, String, StatusCode) {
         //     format!("{:?}", e),
         //     StatusCode::UNAUTHORIZED,
         // ),
-
+        AppError::DbError(e) => match e {
+            DbError::Conflict => (
+                "Conflict",
+                "Outdated resource".into(),
+                StatusCode::CONFLICT,
+            ),
+            DbError::NotFound => (
+                "Not found",
+                "DB Entry not found".into(),
+                StatusCode::NOT_FOUND,
+            ),
+        },
         AppError::UnhandledDbError(e) => (
             "Internal Server Error",
             format!("{:?}", e),
@@ -138,3 +156,5 @@ impl Display for AppError {
         write!(f, "{}", error_message)
     }
 }
+
+impl std::error::Error for AppError {}
