@@ -21,5 +21,5 @@ pub async fn shutdown_signal() {
         _ = terminate => {},
     }
 
-    // tracing::warn!("Signal received, starting graceful shutdown");
+    tracing::warn!("Signal received, starting graceful shutdown");
 }

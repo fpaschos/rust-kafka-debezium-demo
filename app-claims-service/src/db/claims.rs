@@ -1,5 +1,4 @@
 use sqlx::{Executor, Postgres, Transaction};
-use sqlx::types::Json;
 use crate::model::ClaimDb;
 
 // For implementation details of these functions
@@ -8,15 +7,15 @@ use crate::model::ClaimDb;
 //  - https://github.com/launchbadge/sqlx/blob/main/examples/postgres/transaction/src/main.rs#L3-
 
 pub async fn fetch_all(con: impl Executor<'_, Database=Postgres>) -> anyhow::Result<Vec<ClaimDb>> {
-    let rows: Vec<ClaimDb> = sqlx::query_as(r#"SELECT id, involved, status FROM claim"#)
+    let rows: Vec<ClaimDb> = sqlx::query_as(r#"SELECT id, claim_no, incident_type, status FROM claim"#)
         .fetch_all(con)
         .await?;
 
     Ok(rows)
 }
 
-pub async fn fetch_one(con: impl Executor<'_, Database=Postgres>, id: i64) -> anyhow::Result<Option<ClaimDb>> {
-    let row: Option<ClaimDb> = sqlx::query_as(r#"SELECT id, involved, status FROM claim WHERE id = $1"#)
+pub async fn fetch_one(con: impl Executor<'_, Database=Postgres>, id: i32) -> anyhow::Result<Option<ClaimDb>> {
+    let row: Option<ClaimDb> = sqlx::query_as(r#"SELECT id, claim_no, incident_type, status FROM claim WHERE id = $1"#)
         .bind(id)
         .fetch_optional(con)
         .await?;
@@ -24,26 +23,26 @@ pub async fn fetch_one(con: impl Executor<'_, Database=Postgres>, id: i64) -> an
     Ok(row)
 }
 
-
 pub async fn create(tx: &mut Transaction<'_, Postgres>, c: ClaimDb) -> anyhow::Result<ClaimDb> {
-    let row = sqlx::query_as::<_, ClaimDb>(
-        r#"INSERT INTO claim (involved, status) VALUES ($1, $2) RETURNING *"#,
+    let row: ClaimDb = sqlx::query_as(
+        r#"INSERT INTO claim (claim_no, incident_type, status) VALUES ($1, $2, $3) RETURNING *"#,
     )
-        .bind(Json(c.involved))
+        .bind(c.claim_no)
+        .bind(c.incident_type)
         .bind(c.status)
 
         // In 0.7, `Transaction` can no longer implement `Executor` directly,
-        // so it must be dereferenced to the internal connection type.
+        // so it must be de referenced to the internal connection type.
         .fetch_one(&mut **tx)
         .await?;
     Ok(row)
 }
 
 pub async fn update(tx: &mut Transaction<'_, Postgres>, c: ClaimDb) -> anyhow::Result<ClaimDb> {
-    let row = sqlx::query_as::<_, ClaimDb>(
-        r#"UPDATE claim SET involved = $1, status = $2 WHERE id = $3 RETURNING *"#,
+    let row: ClaimDb = sqlx::query_as(
+        r#"UPDATE claim SET incident_type = $1, status = $2 WHERE id = $3 RETURNING *"#,
     )
-        .bind(Json(c.involved))
+        .bind(c.incident_type)
         .bind(c.status)
         .bind(c.id)
         .fetch_one(&mut **tx)

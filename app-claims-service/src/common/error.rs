@@ -5,8 +5,6 @@ use axum::Json;
 use axum::response::{IntoResponse, Response};
 use serde_json::json;
 
-
-// TODO Display
 #[derive(Clone, Debug)]
 pub enum AppError {
     DbError(DbError),
@@ -54,73 +52,6 @@ impl IntoResponse for AppError {
 
 pub fn match_error(error: &AppError) -> (&str, String, StatusCode) {
     match error {
-
-        // AppError::ConfigError(e) => (
-        //     "Internal Server Error",
-        //     format!("{:?}", e),
-        //     StatusCode::INTERNAL_SERVER_ERROR,
-        // ),
-        // AppError::DbError(e) => match e {
-        //     DbError::Conflict => (
-        //         "Conflict",
-        //         "Outdated resource".to_owned(),
-        //         StatusCode::CONFLICT,
-        //     ),
-        //     DbError::NotFound => (
-        //         "Not found",
-        //         "DB Entry not found".to_owned(),
-        //         StatusCode::NOT_FOUND,
-        //     ),
-        // },
-        // AppError::IoError(e) => (
-        //     "Internal Server Error",
-        //     format!("{:?}", e),
-        //     StatusCode::INTERNAL_SERVER_ERROR,
-        // ),
-        // #[cfg(feature = "security")]
-        // AppError::JwkLoaderError(e) => (
-        //     "Internal Server Error",
-        //     format!("{:?}", e),
-        //     StatusCode::INTERNAL_SERVER_ERROR,
-        // ),
-        // #[cfg(feature = "kafka")]
-        // AppError::KafkaError(e) => (
-        //     "Internal Server Error",
-        //     format!("{:?}", e),
-        //     StatusCode::INTERNAL_SERVER_ERROR,
-        // ),
-        // #[cfg(feature = "mongodb")]
-        // AppError::MongoDbBsonError(e) => (
-        //     "Internal Server Error",
-        //     format!("{:?}", e),
-        //     StatusCode::INTERNAL_SERVER_ERROR,
-        // ),
-        // #[cfg(feature = "mongodb")]
-        // AppError::MongoDbError(e) => (
-        //     "Internal Server Error",
-        //     format!("{:?}", e.kind.as_ref()),
-        //     StatusCode::INTERNAL_SERVER_ERROR,
-        // ),
-        // #[cfg(feature = "relationaldb")]
-        // AppError::RelDbUnhandledDbError(e) => handle_sea_orm_db_error(e),
-        // #[cfg(feature = "scheduler")]
-        // AppError::SchedulerError(e) => (
-        //     "Internal Server Error",
-        //     format!("{:?}", e),
-        //     StatusCode::INTERNAL_SERVER_ERROR,
-        // ),
-        // #[cfg(feature = "kafka")]
-        // AppError::SerializationError(e) => (
-        //     "Internal Server Error",
-        //     format!("{:?}", e),
-        //     StatusCode::INTERNAL_SERVER_ERROR,
-        // ),
-        // #[cfg(feature = "security")]
-        // AppError::TokenDecoderError(e) => (
-        //     "Invalid token",
-        //     format!("{:?}", e),
-        //     StatusCode::UNAUTHORIZED,
-        // ),
         AppError::DbError(e) => match e {
             DbError::Conflict => (
                 "Conflict",
