@@ -44,9 +44,29 @@ pub struct PartyDb {
     pub data: Json<PartyData>,
 }
 
+impl PartyDb {
+    pub fn new(claim_id: i32, data: PartyData) -> Self {
+        Self {
+            id:0,
+            claim_id,
+            r#type: data.r#type(),
+            subtype: data.subtype(),
+            data: Json(data),
+        }
+    }
+}
+
 impl From<PartyDb> for Party {
-    fn from(value: PartyDb) -> Self {
-        todo!()
+    fn from(v: PartyDb) -> Self {
+        let PartyDb {id, claim_id, r#type, subtype, data} = v;
+
+        Self {
+            id,
+            claim_id,
+            r#type,
+            subtype,
+            data: data.0,
+        }
     }
 }
 
@@ -122,18 +142,33 @@ pub struct Party {
 
 #[derive(Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-#[serde(tag = "type")]
+#[serde(tag="type")]
 pub enum PartyData {
-    #[serde(rename = "PERSON")]
+    #[serde(rename="PERSON")]
     Person(Person),
-    #[serde(rename = "VEHICLE")]
+    #[serde(rename="VEHICLE")]
     Vehicle(Vehicle),
+}
+
+impl PartyData {
+    pub fn r#type(&self) -> PartyType {
+        match self {
+            PartyData::Vehicle(_)=> PartyType::Vehicle,
+            PartyData::Person(_) => PartyType::Person,
+        }
+    }
+
+    pub fn subtype(&self) -> PartySubtype {
+        match self {
+            PartyData::Vehicle(v)=> v.subtype,
+            PartyData::Person(v) => v.subtype,
+        }
+    }
 }
 
 #[derive(Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Person {
-    pub r#type: PartyType,
     pub subtype: PartySubtype,
     pub name: String,
 }
@@ -141,7 +176,6 @@ pub struct Person {
 #[derive(Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Vehicle {
-    pub r#type: PartyType,
     pub subtype: PartySubtype,
     pub reg_no: String,
     pub make: Option<String>,
