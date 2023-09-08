@@ -1,14 +1,14 @@
 use axum::{Extension, Json};
 use axum::extract::Path;
-use crate::api::rest::resources::{CreateClaim, CreateParty, UpdateClaim};
+use crate::api::rest::resources::{CreateClaim, CreateParty, UpdateClaim, UpdateParty};
 use crate::common::api::ApiContext;
 use crate::common::error::AppError;
 use crate::common::error::DbError::NotFound;
 use crate::{common, db};
 use crate::model::{Claim, ClaimDb, Party, PartyDb};
-// TODO add proper validation to all update eendpoints
+// TODO add proper validation to all update endpoints
 // TODO refactor endpoint internals to be reusable for other apis eg. grpc, graphql etc...
-// TODO in case of `create_claim` endpoint provide deterministic unique claim id via sequence?
+// TODO update_party should not change the type of a party, only the subtype validation
 
 pub async fn fetch_all_claims(Extension(context): Extension<ApiContext>) -> Result<Json<Vec<Claim>>, AppError> {
     let entities = db::claims::fetch_all(&context.db).await?;
@@ -81,7 +81,7 @@ pub async fn add_party(
 
 pub async fn remove_party(
     Extension(context): Extension<ApiContext>,
-    Path((claim_id, party_id)): Path<(i32,i32)>,
+    Path((claim_id, party_id)): Path<(i32, i32)>,
 ) -> Result<Json<Party>, AppError> {
     let mut tx = context.db.begin().await?;
     // Validate that the claim exists
@@ -100,15 +100,33 @@ pub async fn remove_party(
     Ok(party.into())
 }
 
-//
-// pub async fn update_party(
-//     Extension(context): Extension<ApiContext>,
-//     Path(claim_id): Path<i32>,
-//     Path(party_id): Path<i32>,
-//     Json(update_party): Json<UpdateParty>,
-// ) -> Result<Json<Party>, AppError> {
-//     todo!()
-// }
+pub async fn update_party(
+    Extension(context): Extension<ApiContext>,
+    Path((claim_id, party_id)): Path<(i32, i32)>,
+    Json(update_party): Json<UpdateParty>,
+) -> Result<Json<Party>, AppError> {
+    let UpdateParty { data } = update_party;
+    let mut tx = context.db.begin().await?;
+    // Validate that the claim exists
+    db::claims::fetch_one(&context.db, claim_id)
+        .await?
+        .ok_or(AppError::DbError(NotFound))?;
+
+    let mut party = db::parties::fetch_one(&context.db, party_id)
+        .await?
+        .ok_or(AppError::DbError(NotFound))?;
+
+    party.r#type = data.r#type();
+    party.subtype = data.subtype();
+    party.data = sqlx::types::Json(data);
+
+    let party = db::parties::update(&mut tx, party).await?;
+
+    tx.commit().await?;
+
+    let party: Party = party.into();
+    Ok(party.into())
+}
 
 
 

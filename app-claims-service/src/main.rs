@@ -38,46 +38,6 @@ async fn main() -> anyhow::Result<()> {
 
     Ok(())
 }
-/*
-    // Just check the database connection
-    // Make a simple query to return the given parameter (use a question mark `?` instead of `$1` for MySQL)
-    let row: (i64, ) = sqlx::query_as("SELECT $1")
-        .bind(150_i64)
-        .fetch_one(&db)
-        .await?;
-
-    assert_eq!(row.0, 150);
-
-    let involved = Party {
-        first_name: "Foo".into(),
-        last_name: "Bar".into(),
-    };
-    let claim = ClaimDb {
-        id: 0,
-        involved: Json(involved),
-    };
-
-
-    // Try transaction
-    // Insert a new claim
-    // Fetch all claims
-    // Revert
-    // Fetch all claims
-    {
-        let mut tx = db.begin().await?;
-        let claim  = create_claim(&mut tx,  claim).await?;
-        tracing::debug!("Claim with id = {} inserted", claim.id);
-        let claims = fetch_claims(&mut *tx).await?;
-
-        tracing::debug!("Claims found = {}", claims.len());
-        tracing::debug!("Rolling back transaction");
-    }
-    let claims = fetch_claims(&db).await?;
-    tracing::debug!("Claims found = {}", claims.len());
-
-}
-
- */
 
 // TODO configure app log level (using config) and modules log level
 pub fn setup_tracing(_config: &config::Log) -> anyhow::Result<()> {
