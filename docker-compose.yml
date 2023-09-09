@@ -7,31 +7,32 @@ services:
     container_name: kd-zookeeper
     image: quay.io/debezium/zookeeper:${DEBEZIUM_VERSION}
     ports:
-      - "2181:2181"
-      - "2888:2888"
-      - "3888:3888"
+      - "52181:2181"
+      - "52888:2888"
+      - "53888:3888"
     networks:
       - kd-demo
   kafka:
     container_name: kd-kafka
     image: quay.io/debezium/kafka:${DEBEZIUM_VERSION}
     ports:
-      - "9092:9092"
+      - "59092:9092"
     depends_on:
       - zookeeper
     environment:
+      - KAFKA_BROKER_ID=1
       - ZOOKEEPER_CONNECT=zookeeper:2181
-      # What is this for????
-      # For local development of auditlog-enricher
-#      - ADVERTISED_HOST_NAME=192.168.1.6
-      - KAFKA_GROUP_MIN_SESSION_TIMEOUT_MS=250
+      - KAFKA_LISTENERS=INTERNAL://:9092,EXTERNAL://:59092
+      - KAFKA_ADVERTISED_LISTENERS=INTERNAL://kafka:9092,EXTERNAL://localhost:59092
+      - KAFKA_LISTENER_SECURITY_PROTOCOL_MAP=INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT
+      - KAFKA_INTER_BROKER_LISTENER_NAME=INTERNAL
     networks:
       - kd-demo
   postgres:
     image: quay.io/debezium/example-postgres:${DEBEZIUM_VERSION}
     container_name: kd-postgres
     ports:
-      - "5432:5432"
+      - "55432:5432"
     environment:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres

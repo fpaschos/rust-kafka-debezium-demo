@@ -1,5 +1,6 @@
 use std::net::SocketAddr;
 use std::sync::Arc;
+use std::time::Duration;
 
 use anyhow::Context;
 use axum::{Extension, Router};
@@ -24,6 +25,8 @@ async fn main() -> anyhow::Result<()> {
 
     let db = PgPoolOptions::new()
         .max_connections(5)
+        .test_before_acquire(true)
+        .acquire_timeout(Duration::from_secs(5))
         .connect(&config.db.url)
         .await
         .context("Unable to connect to database")?;

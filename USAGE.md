@@ -1,4 +1,5 @@
 #### Instructions/ Usage:
+Optional step for dev, because of local .env file
 Export debezium version (execute once per open terminal session)
 ```bash
 export DEBEZIUM_VERSION=2.3

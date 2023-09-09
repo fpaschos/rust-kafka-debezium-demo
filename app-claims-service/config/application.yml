@@ -1,7 +1,7 @@
 log:
   level: INFO
 server:
-  port: 7080
+  port: 58080
 db:
-  url: postgres://postgres:postgres@localhost:5432/claimsdb
+  url: postgres://postgres:postgres@localhost:55432/claimsdb
 graceful-shutdown: 5

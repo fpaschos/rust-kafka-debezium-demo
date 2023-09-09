@@ -7,7 +7,6 @@ pub async fn fetch_one(con: impl Executor<'_, Database=Postgres>, id: i32) -> an
         .bind(id)
         .fetch_optional(con)
         .await?;
-
     Ok(row)
 }
 
