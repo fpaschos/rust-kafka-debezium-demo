@@ -34,9 +34,12 @@ services:
     ports:
       - "55432:5432"
     environment:
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_USER=postgres_user
+      - POSTGRES_PASSWORD=postgres_user
       - POSTGRES_DB=claimsdb
+    volumes:
+#      - conf/postgresdata:/var/lib/postgresql/data
+      - ./conf/db-init:/docker-entrypoint-initdb.d
     networks:
       - kd-demo
 networks:

@@ -3,5 +3,5 @@ log:
 server:
   port: 58080
 db:
-  url: postgres://postgres:postgres@localhost:55432/claimsdb
+  url: postgres://postgres_user:postgres_user@localhost:55432/claimsdb
 graceful-shutdown: 5

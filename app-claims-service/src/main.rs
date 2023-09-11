@@ -5,7 +5,7 @@ use std::time::Duration;
 use anyhow::Context;
 use axum::{Extension, Router};
 use axum::routing::get;
-use sqlx::PgPool;
+use sqlx::{Executor, PgPool};
 use sqlx::postgres::PgPoolOptions;
 use tracing_subscriber::prelude::__tracing_subscriber_SubscriberExt;
 use crate::common::api::{ApiContext, health};
@@ -27,6 +27,15 @@ async fn main() -> anyhow::Result<()> {
         .max_connections(5)
         .test_before_acquire(true)
         .acquire_timeout(Duration::from_secs(5))
+        // This allows us to select which schema to use
+        // see: https://docs.rs/sqlx/latest/sqlx/pool/struct.PoolOptions.html#method.after_connect
+        .after_connect(|conn, _meta| Box::pin(async move {
+            // When directly invoking `Executor` methods,
+            // it is possible to execute multiple statements with one call.
+            conn.execute("SET search_path = 'claims';")
+                .await?;
+            Ok(())
+        }))
         .connect(&config.db.url)
         .await
         .context("Unable to connect to database")?;
