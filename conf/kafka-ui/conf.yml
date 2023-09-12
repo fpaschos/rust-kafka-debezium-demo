@@ -1,0 +1,11 @@
+auth:
+  type: DISABLED
+kafka:
+  clusters:
+    - bootstrapServers: kafka:9092
+      name: kafka-debezium-demo-1
+      properties: {}
+      readOnly: false
+rbac:
+  roles: []
+webclient: {}

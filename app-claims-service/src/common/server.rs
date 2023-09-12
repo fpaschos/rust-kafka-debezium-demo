@@ -1,4 +1,3 @@
-
 /// Handles server graceful termination
 /// Receives termination signals logs the result and begins the termination process
 pub async fn shutdown_signal() {
