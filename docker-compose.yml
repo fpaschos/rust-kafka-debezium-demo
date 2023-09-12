@@ -42,14 +42,50 @@ services:
       - ./conf/db-init:/docker-entrypoint-initdb.d
     networks:
       - kd-demo
+  connect:
+    image: quay.io/debezium/connect:${DEBEZIUM_VERSION}
+    container_name: kd-connect
+    ports:
+      - "58083:8083"
+    links:
+      - kafka
+      - postgres
+    environment:
+      - BOOTSTRAP_SERVERS=kafka:9092
+      - GROUP_ID=1
+      - CONFIG_STORAGE_TOPIC=my_connect_configs
+      - OFFSET_STORAGE_TOPIC=my_connect_offsets
+      - STATUS_STORAGE_TOPIC=my_connect_statuses
+      - ENABLE_DEBEZIUM_KC_REST_EXTENSION=true
+      - ENABLE_DEBEZIUM_SCRIPTING=true
+      - CONNECT_REST_EXTENSION_CLASSES=io.debezium.kcrestextension.DebeziumConnectRestExtension
+#      - ENABLE_APICURIO_CONVERTERS=true
+#      - ENABLE_JOLOKIA=true
+    networks:
+      - kd-demo
   kafka-ui:
     image: provectuslabs/kafka-ui:${KAFKA_UI_VERSION}
+    container_name: kd-kafka-ui
     ports:
       - "58000:8080"
     environment:
       - DYNAMIC_CONFIG_ENABLED=true
     volumes:
       - ./conf/kafka-ui/conf.yml:/etc/kafkaui/dynamic_config.yaml
+    networks:
+      - kd-demo
+  debezium-ui:
+    # TODO: Check again for the correct image architecture.
+    platform: linux/x86_64
+#    image: quay.io/debezium/debezium-ui:2.4
+    image: quay.io/debezium/debezium-ui:${DEBEZIUM_VERSION}
+    container_name: kd-debezium-ui
+    ports:
+      - "58001:8080"
+    links:
+      - connect
+    environment:
+      KAFKA_CONNECT_URIS: http://connect:8083
     networks:
       - kd-demo
 networks:
