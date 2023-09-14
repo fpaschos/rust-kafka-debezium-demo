@@ -16,7 +16,7 @@ services:
     container_name: kd-kafka
     image: quay.io/debezium/kafka:${DEBEZIUM_VERSION}
     ports:
-      - "59092:9092"
+      - "59092:59092"
     depends_on:
       - zookeeper
     environment:

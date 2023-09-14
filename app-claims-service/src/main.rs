@@ -7,7 +7,6 @@ use axum::{Extension, Router};
 use axum::routing::get;
 use sqlx::{Executor, PgPool};
 use sqlx::postgres::PgPoolOptions;
-use tracing_subscriber::prelude::__tracing_subscriber_SubscriberExt;
 use crate::common::api::{ApiContext, health};
 use crate::config::AppConfig;
 
