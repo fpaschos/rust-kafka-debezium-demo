@@ -1,0 +1,13 @@
+[package]
+name = "app-claims-version-service"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+claims-core = { path = "../claims-core"}
+anyhow = "1.0.75"
+serde = { version = "1.0.188", features = ["derive"] }
+tokio = { version = "1.32.0", features = ["rt-multi-thread", "macros", "signal"] }
+tracing = "0.1.37"

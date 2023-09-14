@@ -28,7 +28,14 @@ curl -i -X POST \
   -d @conf/kafka-connect/register-claims-postgres-connector.json
 ```
 
-
+Register claims schema no schema converter postgres connector
+```bash
+curl -i -X POST \
+  -H "Accept:application/json" \
+  -H  "Content-Type:application/json" \
+  http://localhost:58083/connectors/ \
+  -d @conf/kafka-connect/register-claims-postgres-no-schema-connector.json
+```
 
 #### Utility actions:
 Check everything up and running

@@ -1,3 +1,7 @@
 [workspace]
 resolver = "2"
-members = ["app-claims-service"]
+members = [
+    "claims-core",
+    "app-claims-service",
+    "app-claims-version-service"
+]

@@ -8,7 +8,8 @@
     "database.user": "postgres_user",
     "database.password": "postgres_user",
     "database.dbname": "claimsdb",
-    "topic.prefix": "claims-app",
-    "schema.include.list": "claims"
+    "topic.prefix": "claims",
+    "schema.include.list": "claims",
+    "table.include.list": "claims.claim, claims.party"
   }
 }
