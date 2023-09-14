@@ -9,7 +9,6 @@ edition = "2021"
 claims-core = { path = "../claims-core"}
 anyhow = "1.0.75"
 axum = "0.6.19"
-config = { version = "0.13.3", features = ["yaml"] }
 rand = "0.8.5"
 serde = { version = "1.0.188", features = ["derive"] }
 serde_json = { version = "1.0.105", features = ["raw_value"] }

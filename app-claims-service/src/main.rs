@@ -9,6 +9,7 @@ use sqlx::{Executor, PgPool};
 use sqlx::postgres::PgPoolOptions;
 use tracing_subscriber::prelude::__tracing_subscriber_SubscriberExt;
 use crate::common::api::{ApiContext, health};
+use crate::config::AppConfig;
 
 mod config;
 mod common;
@@ -19,9 +20,9 @@ mod api;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
-    let config = config::load(&"./config/application.yml").context("Unable to load config")?;
+    let config: AppConfig = claims_core::config::load(&"./config/application.yml").context("Unable to load config")?;
     let config = Arc::new(config);
-    setup_tracing(&config.log)?;
+    claims_core::tracing::setup_tracing(&config.log)?;
 
     let db = PgPoolOptions::new()
         .max_connections(5)
@@ -48,15 +49,6 @@ async fn main() -> anyhow::Result<()> {
 
     start_web_server(&config, &db).await.context("Unable to start web server")?;
 
-    Ok(())
-}
-
-// TODO configure app log level (using config) and modules log level
-pub fn setup_tracing(_config: &config::Log) -> anyhow::Result<()> {
-    let fmt_layer = tracing_subscriber::fmt::layer().json();
-    let subscriber = tracing_subscriber::registry()
-        .with(fmt_layer);
-    tracing::subscriber::set_global_default(subscriber)?;
     Ok(())
 }
 
