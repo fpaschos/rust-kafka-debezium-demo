@@ -2,6 +2,7 @@
 resolver = "2"
 members = [
     "claims-core",
+    "claims-schema",
     "app-claims-service",
     "app-claims-version-service"
 ]

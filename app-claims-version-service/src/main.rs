@@ -2,7 +2,7 @@ use anyhow::Context;
 use futures::{StreamExt, TryStreamExt};
 use rdkafka::{ClientConfig, ClientContext, Statistics, TopicPartitionList};
 use rdkafka::config::RDKafkaLogLevel;
-use rdkafka::consumer::{BaseConsumer, Consumer, ConsumerContext, Rebalance, StreamConsumer};
+use rdkafka::consumer::{Consumer, ConsumerContext, StreamConsumer};
 use rdkafka::error::{KafkaError, KafkaResult};
 use rdkafka::message::BorrowedMessage;
 use rdkafka::Message;
@@ -14,13 +14,9 @@ mod config;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
-    let config: AppConfig = claims_core::config::load(&"./config/application.yml").context("Unable to load config")?;
+    let config: AppConfig = claims_core::config::load("./config/application.yml")
+        .context("Unable to load config")?;
     setup_tracing(&config.log)?;
-    // tracing::info!("Test");
-    // tracing::warn!("Test");
-    // tracing::debug!("Test");
-    // tracing::trace!("Test");
-
     run_consumer().await?;
 
     Ok(())
@@ -44,16 +40,9 @@ impl ClientContext for CustomContext {
 
 
 impl ConsumerContext for CustomContext {
-    fn pre_rebalance(&self, rebalance: &Rebalance) {
-        println!("Pre rebalance {:?}", rebalance);
-    }
-
-    fn post_rebalance(&self, rebalance: &Rebalance) {
-        println!("Post rebalance {:?}", rebalance);
-    }
 
     fn commit_callback(&self, result: KafkaResult<()>, _offsets: &TopicPartitionList) {
-        println!("Committing offsets: {:?}", result);
+        tracing::debug!("Committing offsets: {:?}", result);
     }
 }
 
@@ -68,53 +57,31 @@ pub async fn run_consumer() -> anyhow::Result<()> {
         .set("bootstrap.servers", "localhost:59092")
         .set("enable.partition.eof", "false")
         .set("session.timeout.ms", "6000")
-        .set("enable.auto.commit", "false")
-        // .set("auto.commit.interval.ms", "5000")
+        .set("enable.auto.commit", "true")
+        .set("auto.commit.interval.ms", "5000")
         .set("auto.offset.reset", "earliest")
         .set_log_level(RDKafkaLogLevel::Debug)
         .create_with_context(CustomContext)
-        // .create()
         .context("Kafka: Consumer creation failed")?;
 
-    consumer.subscribe(&["claims-ns.claims.claim"]).context("Kafka: Unable to subscribe to topic")?;
+    consumer
+        .subscribe(&["claims-ns.claims.claim", "claims-ns.claims.party"])
+        .context("Kafka: Unable to subscribe to topic")?;
 
     tracing::info!("Starting event loop");
-    let mut stream = consumer.stream();
-    loop {
-        let message = stream.next().await;
-        match message {
-            Some(Ok(message)) => println!(
-                "Received message: {}",
-                match message.payload_view::<str>() {
-                    None => "",
-                    Some(Ok(s)) => s,
-                    Some(Err(_)) => "<invalid utf-8>",
-                }
-            ),
-            Some(Err(e)) => {
-                eprintln!("Error receiving message: {}", e);
-                break;
-            }
 
-            None => {
-                eprintln!("Consumer unexpectedly returned no messages");
-                break;
-            }
+    let stream_consumer = consumer.stream().try_for_each(|msg: BorrowedMessage| {
+        tracing::debug!("Message received offset {}", &msg.offset());
+        tracing::debug!("Message payload {:?}", &msg.payload());
+        async move {
+            // tracing::debug!("Message received {}", &msg.offset());
+            // tracing::debug!("Message received {}", msg.offset());
+            Ok(())
         }
-    }
+    });
 
-
-    // let stream_consumer = consumer.stream().try_for_each(|msg: BorrowedMessage| {
-    //     tracing::debug!("Message received {}", &msg.offset());
-    //     async move {
-    //         tracing::debug!("Message received {}", &msg.offset());
-    //         // tracing::debug!("Message received {}", msg.offset());
-    //         Ok(())
-    //     }
-    // });
-
-    // stream_consumer.await
-    //     .context("Kafka: Stream consumer failed")?;
+    stream_consumer.await
+        .context("Kafka: Stream consumer failed")?;
     tracing::info!("Stream processing terminated");
     Ok(())
 }

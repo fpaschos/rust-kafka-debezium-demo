@@ -1,0 +1,13 @@
+syntax = "proto3";
+
+import "google/protobuf/wrappers.proto";
+
+package claims.schema; // Replace with your actual package name
+
+
+// Enum for IncidentType
+enum IncidentType {
+  OTHER_DAMAGE = 0;
+  COLLISION = 1;
+  ROAD_ASSISTANCE = 2;
+}
