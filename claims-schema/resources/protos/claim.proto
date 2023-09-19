@@ -13,5 +13,4 @@ message Claim {
   string claim_no = 2;
   ClaimStatus status = 3;
   IncidentType incident_type = 4;
-  string foo = 5;
 }
