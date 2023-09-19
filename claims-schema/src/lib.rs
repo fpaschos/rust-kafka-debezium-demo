@@ -28,8 +28,8 @@ mod tests {
     #[test]
     fn claim_serialize_deserialize() {
         let input = protos::claim::Claim {
-            id: 0,
-            claim_no: "".into(),
+            id: 1,
+            claim_no: "TRG1000".into(),
             status: ClaimStatus::OPEN.into(),
             incident_type: IncidentType::OTHER_DAMAGE.into(),
             ..Default::default()
@@ -38,6 +38,6 @@ mod tests {
         let output = protos::claim::Claim::parse_from_bytes(&serialized).unwrap();
         assert_eq!(input, output);
 
-        println!("Claim data {:?}", &output);
+        // println!("Claim data {:?}", &output);
     }
 }

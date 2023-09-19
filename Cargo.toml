@@ -1,9 +1,12 @@
 [workspace]
 resolver = "2"
 members = [
+    "examples/*",
     "claims-core",
     "claims-schema",
     "claims-schema-register",
     "app-claims-service",
     "app-claims-version-service"
 ]
+
+default-members = ["claims-*", "app-*"]

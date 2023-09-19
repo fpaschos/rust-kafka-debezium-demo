@@ -5,6 +5,7 @@ For more information see:
 Reference projects:
 - [debezium-examples/distributed-caching](https://github.com/debezium/debezium-examples/blob/main/distributed-caching/README.md)
 - [cschaible/rust-microservices-kafka](https://github.com/cschaible/rust-microservices-kafka/blob/master/README.md)
+- [gklijs/ksqlDB-GraphQL-poc](https://github.com/gklijs/ksqlDB-GraphQL-poc/blob/main/README.md)
 - [govinda-attal/app-a/](https://github.com/govinda-attal/app-a/blob/main/README.md)
 - - [Medium: Rust gRPC Service — First Season Concludes](https://medium.com/@govinda.attal/rust-grpc-service-first-season-concludes-9b077421a303)
 

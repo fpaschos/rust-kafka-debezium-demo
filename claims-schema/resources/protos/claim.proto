@@ -6,11 +6,13 @@ import "incidentType.proto";
 
 package claims.schema;
 
-
 // Claim entity
 message Claim {
   int32 id = 1;
   string claim_no = 2;
   ClaimStatus status = 3;
   IncidentType incident_type = 4;
+  // Reserved
+  //  string random_string = 5;
+  int32 age = 6;
 }

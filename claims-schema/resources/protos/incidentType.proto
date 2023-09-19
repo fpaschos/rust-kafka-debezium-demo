@@ -4,7 +4,6 @@ import "google/protobuf/wrappers.proto";
 
 package claims.schema;
 
-
 // Enum for IncidentType
 enum IncidentType {
   OTHER_DAMAGE = 0;

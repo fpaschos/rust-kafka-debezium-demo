@@ -55,7 +55,7 @@ fn register_schema(schema_registry_url: &str, subject_name: &str, schema_definit
         name: Some(subject_name.to_owned()),
         schema_type: SchemaType::Protobuf,
         schema: schema_definition.to_owned(),
-        references
+        references,
     };
 
     let result = register_schema_as_subject(schema_registry_url, subject_name, schema);
