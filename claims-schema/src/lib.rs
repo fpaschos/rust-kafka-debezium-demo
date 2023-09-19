@@ -1,5 +1,19 @@
 pub mod protos;
 
+pub const SCHEMA_NAME_CLAIM: &str = "Claim";
+
+pub const RAW_SCHEMA_CLAIM: &str = include_str!("../resources/protos/claim.proto");
+
+
+pub const SCHEMA_NAME_CLAIM_STATUS: &str = "ClaimStatus";
+
+pub const RAW_SCHEMA_CLAIM_STATUS: &str = include_str!("../resources/protos/claimStatus.proto");
+
+
+pub const SCHEMA_NAME_INCIDENT_STATUS: &str = "IncidentStatus";
+
+pub const RAW_SCHEMA_INCIDENT_STATUS: &str = include_str!("../resources/protos/incidentType.proto");
+
 #[cfg(test)]
 mod tests {
     use protobuf::Message;

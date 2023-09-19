@@ -2,7 +2,7 @@ syntax = "proto3";
 
 import "google/protobuf/wrappers.proto";
 
-package claims.schema; // Replace with your actual package name
+package claims.schema;
 
 // Enum for ClaimStatus
 enum ClaimStatus {
@@ -10,5 +10,6 @@ enum ClaimStatus {
   CLOSED = 1;
   CANCELLED = 2;
   UNDER_REVISION = 3;
+  ADD_NEW = 4;
 }
 
