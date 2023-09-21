@@ -12,7 +12,8 @@ message Claim {
   string claim_no = 2;
   ClaimStatus status = 3;
   IncidentType incident_type = 4;
-  // Reserved
+  // Reserved deprecated
   //  string random_string = 5;
-  int32 age = 6;
+  //  int32 age = 6;
+  //  string foo = 7;
 }

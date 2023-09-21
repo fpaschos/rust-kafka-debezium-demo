@@ -32,7 +32,6 @@ async fn main() -> anyhow::Result<()> {
         id: 10,
         claim_no: "FOO".into(),
         status: OPEN.into(),
-        age: 10,
         ..Default::default()
     };
 
