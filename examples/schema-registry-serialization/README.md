@@ -5,7 +5,5 @@ A running confluent schema registry instance with claims-schema definitions regi
 
 Run with
 ```bash
-docker compose up -d
-cargo run -p claims-schema-register
 cargo run -p schema-registry-serialization
 ```

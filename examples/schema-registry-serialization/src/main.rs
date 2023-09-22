@@ -12,7 +12,7 @@ use claims_schema::protos;
 use claims_schema::protos::claimStatus::ClaimStatus::OPEN;
 use protobuf::Message;
 use tracing_subscriber::fmt::Subscriber;
-use crate::record_producer::{get_producer, ProtoTopicMessage};
+use crate::record_producer::get_producer;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
@@ -35,17 +35,13 @@ async fn main() -> anyhow::Result<()> {
         ..Default::default()
     };
 
+
+    producer.send("claims.test", &claim.id.to_be_bytes() , &claim).await?;
+    producer.send_proto("claims.test", &claim).await?;
     // Encode to protobuf payload
-    let payload = claim.write_to_bytes()?;
-    let key = claim.id.to_string();
-
-    let m = ProtoTopicMessage {
-        topic: &"claims.test",
-        payload: &payload,
-        key: key.as_bytes(),
-    };
-
-    producer.send_message(m).await?;
+    // Encode to protobuf payload
+    // let m = claim.for_topic("claims.test")?;
+    // producer.send_message(m).await?;
 
 
 
