@@ -1,0 +1,18 @@
+### IntelliJ IDEA ###
+out/
+!**/src/main/**/out/
+!**/src/test/**/out/
+
+### Gradle ###
+.gradle
+build/
+
+
+### VS Code ###
+.vscode/
+
+### Mac OS ###
+.DS_Store
+
+### Protos are copied from other source ###
+src/main/resources/protos

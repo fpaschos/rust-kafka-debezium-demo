@@ -4,9 +4,12 @@ members = [
     "examples/*",
     "claims-core",
     "claims-schema",
-    "claims-schema-register",
     "app-claims-service",
     "app-claims-version-service"
 ]
 
-default-members = ["claims-*", "app-*"]
+default-members = [
+    "claims-core",
+    "claims-schema",
+    "app-*"
+]

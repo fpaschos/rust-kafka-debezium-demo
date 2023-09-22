@@ -11,10 +11,14 @@ out/
 ### Mac OS ###
 .DS_Store
 
-###  Rust
+###  Rust ###
 target/
 Cargo.lock
 
+
+### Gradle ###
+.gradle
+build/
 
 
 
