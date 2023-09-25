@@ -4,6 +4,7 @@ For more information see:
 
 Reference projects:
 - [debezium-examples/distributed-caching](https://github.com/debezium/debezium-examples/blob/main/distributed-caching/README.md)
+- [Rust multi module microservices - Series](https://medium.com/@omprakashsridharan/rust-multi-module-microservices-part-1-introduction-fb0121f1d541)
 - [cschaible/rust-microservices-kafka](https://github.com/cschaible/rust-microservices-kafka/blob/master/README.md)
 - [gklijs/ksqlDB-GraphQL-poc](https://github.com/gklijs/ksqlDB-GraphQL-poc/blob/main/README.md)
 - [govinda-attal/app-a/](https://github.com/govinda-attal/app-a/blob/main/README.md)

@@ -8,6 +8,7 @@ publish = false
 
 [dependencies]
 anyhow = "1.0.75"
+async-trait = "0.1.73"
 bytes = "1.5.0"
 claims-schema = { path = "../../claims-schema" }
 const_format = "0.2.31"

@@ -6,8 +6,8 @@ fn main() {
     Codegen::new()
         .pure()
         .out_dir("src/protos")
-        .includes(&["resources/protos"])
-        .inputs(&[
+        .includes(["resources/protos"])
+        .inputs([
             "resources/protos/claim.proto",
             "resources/protos/claimStatus.proto",
             "resources/protos/incidentType.proto",
