@@ -6,7 +6,6 @@
 //!
 //! Note a running instance of schema registry is required with the available schemas registered.
 use anyhow::Context;
-use const_format::concatcp;
 use protobuf::Message;
 use schema_registry_converter::async_impl::easy_proto_raw::EasyProtoRawEncoder;
 use schema_registry_converter::async_impl::schema_registry::SrSettings;
@@ -34,11 +33,17 @@ pub trait KeySchemaName {
     fn key_full_name(&self) -> &'static str;
 }
 
-impl SchemaName for Claim {
-    fn full_name(&self) -> &'static str {
-        concatcp!(CLAIMS_SCHEMA, Claim::NAME)
-    }
+macro_rules! schema_name {
+    ( $schema_literal:expr, $struct_name:ident) => {
+        impl SchemaName for $struct_name {
+            fn full_name(&self) -> &'static str {
+                const_format::concatcp!($schema_literal, stringify!($struct_name))
+            }
+        }
+    };
 }
+
+schema_name!(CLAIMS_SCHEMA, Claim);
 
 struct MessageKeyPair<'m, M>(&'m M, &'m [u8]);
 
@@ -111,7 +116,7 @@ async fn main() -> anyhow::Result<()> {
 
     // Start to send proto messages on this task
     // Create protobuf entity
-    let claim = protos::claim::Claim {
+    let claim = Claim {
         id: 10,
         claim_no: "Fotis Paschos".into(),
         status: OPEN.into(),
