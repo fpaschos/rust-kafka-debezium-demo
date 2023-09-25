@@ -12,6 +12,7 @@ async-trait = "0.1.73"
 bytes = "1.5.0"
 claims-schema = { path = "../../claims-schema" }
 const_format = "0.2.31"
+futures = "0.3.28"
 protobuf = "3.2.0"
 
 rdkafka = "0.34.0"

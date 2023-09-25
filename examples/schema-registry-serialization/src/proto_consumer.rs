@@ -5,6 +5,7 @@ use rdkafka::consumer::{CommitMode, Consumer, StreamConsumer};
 use rdkafka::{ClientConfig, Message as KafkaMessage};
 use schema_registry_converter::async_impl::easy_proto_raw::EasyProtoRawDecoder;
 use schema_registry_converter::async_impl::schema_registry::SrSettings;
+use std::future::Future;
 
 // TODO context for auto commit?
 pub struct ProtoConsumer {
@@ -26,10 +27,11 @@ impl ProtoConsumer {
         }
     }
 
-    pub async fn consume<M: Message>(
-        &self,
-        mut handler: impl FnMut(M) -> (),
-    ) -> anyhow::Result<()> {
+    pub async fn consume<M, Fut>(&self, handler: impl Fn(M) -> Fut) -> anyhow::Result<()>
+    where
+        M: Message,
+        Fut: Future<Output = ()> + Send,
+    {
         self.consumer
             .subscribe(&[&self.topic])
             .context(format!("Can't subscribe to topic {}", self.topic))?;
@@ -43,8 +45,7 @@ impl ProtoConsumer {
 
             let parsed_payload = Message::parse_from_bytes(&decoded_payload.bytes)?;
 
-            handler(parsed_payload);
-            // anyhow::bail!("Fail before commit offsets");
+            handler(parsed_payload).await;
 
             // Commit the offsets
             self.consumer.commit_message(&message, CommitMode::Async)?;

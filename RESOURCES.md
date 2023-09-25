@@ -13,3 +13,6 @@ Reference projects:
 Rust libraries:
 - [axum](https://github.com/tokio-rs/axum)
 - [sqlx](https://github.com/launchbadge/sqlx/blob/main/README.md)
+
+Rust (advanced) helping material
+[Thoughts on async closures] (https://smallcultfollowing.com/babysteps/blog/2023/03/29/thoughts-on-async-closures/)

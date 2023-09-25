@@ -10,6 +10,7 @@ use const_format::concatcp;
 use protobuf::Message;
 use schema_registry_converter::async_impl::easy_proto_raw::EasyProtoRawEncoder;
 use schema_registry_converter::async_impl::schema_registry::SrSettings;
+use std::sync::{Arc, Mutex};
 use tracing_subscriber::fmt::Subscriber;
 
 use claims_schema::protos;
@@ -65,20 +66,17 @@ impl<'m, M: SchemaName + Message> ProtoMessage for MessageKeyPair<'m, M> {
 }
 
 // Example message handler
-struct MessageHandler {
-    name: String,
+#[derive(Clone, Default)]
+struct CountingMessageHandler {
+    counter: Arc<Mutex<u32>>,
 }
 
-impl MessageHandler {
+impl CountingMessageHandler {
     #[allow(dead_code)]
-    pub fn handle_message(&self, claim: Claim) {
-        tracing::info!("{} Consumed {}", self.name, claim);
-    }
-
-    #[allow(dead_code)]
-    pub fn handle_message_mut(&mut self, claim: Claim) {
-        self.name.push('+');
-        tracing::info!("{} Consumed {}", self.name, claim);
+    pub async fn handle_message(&self, claim: Claim) {
+        let mut c = self.counter.lock().unwrap();
+        *c += 1;
+        tracing::info!("Counter = {} Consumed {}", c, claim);
     }
 }
 
@@ -99,13 +97,17 @@ async fn main() -> anyhow::Result<()> {
         "claims.test",
     );
 
-    let mut handler = MessageHandler {
-        name: "TEST_HANDLER".into(),
-    };
+    let handler = CountingMessageHandler::default();
 
     // Spawn a task to consume messages
-    let consumer =
-        tokio::spawn(async move { consumer.consume(|c| handler.handle_message_mut(c)).await });
+    let consumer = tokio::spawn(async move {
+        consumer
+            .consume(move |c| {
+                let handler = handler.clone();
+                async move { handler.handle_message(c).await }
+            })
+            .await
+    });
 
     // Start to send proto messages on this task
     // Create protobuf entity
@@ -128,7 +130,7 @@ async fn main() -> anyhow::Result<()> {
         .await?;
     tracing::info!("{:?} {}", v, String::from_utf8(v.payload().to_vec())?);
 
-    // Example of sending multiple times the same messagex
+    // Example of sending multiple times the same message
     for _i in 0..2 {
         producer
             .send_topic_name(
@@ -139,25 +141,6 @@ async fn main() -> anyhow::Result<()> {
             .await?;
         tracing::info!("Claim message send successfully")
     }
-    // producer.send_proto("claims.test", claim).await?;
-    // Encode to protobuf payload
-    // Encode to protobuf payload
-    // let m = claim.for_topic("claims.test")?;
-    // producer.send_message(m).await?;
-
-    // Create schema registry proto encoder
-    // let settings = SrSettings::new("http://localhost:58003".into());
-    // let proto_encoder = EasyProtoRawEncoder::new(settings.clone());
-
-    // let encoded_value = proto_encoder.encode_single_message(&payload, value_strategy).await?;
-    //
-    // // Define schema registry proto decoder
-    // let proto_decoder = EasyProtoRawDecoder::new(settings);
-    // let decoded_value = proto_decoder.decode(Some(&encoded_value)).await?.unwrap();
-    // let decoded_claim = protos::claim::Claim::parse_from_bytes(&decoded_value.bytes)?;
-    // assert_eq!(decoded_claim, claim);
-    //
-    // tracing::info!("Decoded claim {:?}", decoded_claim);
 
     // Wait for consumer to terminate
     if let Ok(Err(err)) = consumer.await {
