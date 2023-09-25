@@ -99,7 +99,6 @@ impl ProtoEncoder for EasyProtoRawEncoder {
                 }
             } else {
                 // In case of no strategy pass the key as raw bytes
-
                 m.key()
             }
         };

@@ -30,7 +30,7 @@ impl ProtoConsumer {
     pub async fn consume<M, Fut>(&self, handler: impl Fn(M) -> Fut) -> anyhow::Result<()>
     where
         M: Message,
-        Fut: Future<Output = ()> + Send,
+        Fut: Future<Output = ()>,
     {
         self.consumer
             .subscribe(&[&self.topic])

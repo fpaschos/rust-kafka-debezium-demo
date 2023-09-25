@@ -9,10 +9,10 @@ use anyhow::Context;
 use protobuf::Message;
 use schema_registry_converter::async_impl::easy_proto_raw::EasyProtoRawEncoder;
 use schema_registry_converter::async_impl::schema_registry::SrSettings;
-use std::sync::{Arc, Mutex};
+use std::sync::atomic::{AtomicU32, Ordering};
+use std::sync::Arc;
 use tracing_subscriber::fmt::Subscriber;
 
-use claims_schema::protos;
 use claims_schema::protos::claim::Claim;
 use claims_schema::protos::claimStatus::ClaimStatus::OPEN;
 use proto_producer::ProtoEncoder;
@@ -73,14 +73,13 @@ impl<'m, M: SchemaName + Message> ProtoMessage for MessageKeyPair<'m, M> {
 // Example message handler
 #[derive(Clone, Default)]
 struct CountingMessageHandler {
-    counter: Arc<Mutex<u32>>,
+    counter: Arc<AtomicU32>,
 }
 
 impl CountingMessageHandler {
     #[allow(dead_code)]
     pub async fn handle_message(&self, claim: Claim) {
-        let mut c = self.counter.lock().unwrap();
-        *c += 1;
+        let c = self.counter.fetch_add(1, Ordering::SeqCst);
         tracing::info!("Counter = {} Consumed {}", c, claim);
     }
 }
