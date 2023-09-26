@@ -6,6 +6,8 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+claims-core = { path = "../claims-core"}
+const_format = "0.2.31"
 protobuf = "3.2.0"
 
 [build-dependencies]

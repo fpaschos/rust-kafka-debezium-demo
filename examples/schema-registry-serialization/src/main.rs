@@ -6,7 +6,11 @@
 //!
 //! Note a running instance of schema registry is required with the available schemas registered.
 use anyhow::Context;
-use protobuf::Message;
+use claims_core::kakfa::proto_consumer;
+use claims_core::kakfa::proto_producer;
+use claims_core::proto_encode::encoder::ProtoEncoder;
+use claims_core::proto_encode::message::MessageKeyPair;
+
 use schema_registry_converter::async_impl::easy_proto_raw::EasyProtoRawEncoder;
 use schema_registry_converter::async_impl::schema_registry::SrSettings;
 use std::sync::atomic::{AtomicU32, Ordering};
@@ -15,60 +19,8 @@ use tracing_subscriber::fmt::Subscriber;
 
 use claims_schema::protos::claim::Claim;
 use claims_schema::protos::claimStatus::ClaimStatus::OPEN;
-use proto_producer::ProtoEncoder;
-
-use crate::proto_consumer::get_consumer;
-use crate::proto_producer::{get_producer, ProtoMessage};
-
-mod proto_consumer;
-mod proto_producer;
 
 // TODO keep only main here and move all the finalized code to claims-core lib project
-const CLAIMS_SCHEMA: &str = "claims.schema.";
-pub trait SchemaName {
-    fn full_name(&self) -> &'static str;
-}
-
-pub trait KeySchemaName {
-    fn key_full_name(&self) -> &'static str;
-}
-
-macro_rules! schema_name {
-    ( $schema_literal:expr, $struct_name:ident) => {
-        impl SchemaName for $struct_name {
-            fn full_name(&self) -> &'static str {
-                const_format::concatcp!($schema_literal, stringify!($struct_name))
-            }
-        }
-    };
-}
-
-schema_name!(CLAIMS_SCHEMA, Claim);
-
-struct MessageKeyPair<'m, M>(&'m M, &'m [u8]);
-
-impl<'m, M: SchemaName + Message> ProtoMessage for MessageKeyPair<'m, M> {
-    #[inline]
-    fn key(&self) -> Vec<u8> {
-        self.1.into()
-    }
-
-    #[inline]
-    fn payload(&self) -> anyhow::Result<Vec<u8>> {
-        let payload = self.0.write_to_bytes()?;
-        Ok(payload)
-    }
-
-    #[inline]
-    fn full_name(&self) -> &'static str {
-        self.0.full_name()
-    }
-
-    #[inline]
-    fn key_full_name(&self) -> Option<&'static str> {
-        None
-    }
-}
 
 // Example message handler
 #[derive(Clone, Default)]
@@ -93,8 +45,8 @@ async fn main() -> anyhow::Result<()> {
 
     let schema_registry_url = "http://localhost:58003";
     let brokers = "localhost:59092";
-    let producer = get_producer(brokers, schema_registry_url);
-    let consumer = get_consumer(
+    let producer = proto_producer::get_producer(brokers, schema_registry_url);
+    let consumer = proto_consumer::get_consumer(
         brokers,
         schema_registry_url,
         "example_claim_consumer",
@@ -106,10 +58,7 @@ async fn main() -> anyhow::Result<()> {
     // Spawn a task to consume messages
     let consumer = tokio::spawn(async move {
         consumer
-            .consume(move |c| {
-                let handler = handler.clone();
-                async move { handler.handle_message(c).await }
-            })
+            .consume(|c| async { handler.handle_message(c).await })
             .await
     });
 

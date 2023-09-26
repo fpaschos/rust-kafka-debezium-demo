@@ -1,9 +1,9 @@
+use axum::http::StatusCode;
+use axum::response::{IntoResponse, Response};
+use axum::Json;
+use serde_json::json;
 use std::fmt::{Display, Formatter};
 use std::sync::Arc;
-use axum::http::StatusCode;
-use axum::Json;
-use axum::response::{IntoResponse, Response};
-use serde_json::json;
 
 #[derive(Clone, Debug)]
 pub enum AppError {
@@ -15,6 +15,7 @@ pub enum AppError {
 #[derive(Clone, Copy, Debug)]
 pub enum DbError {
     NotFound,
+    #[allow(unused)]
     Conflict,
 }
 
@@ -53,11 +54,7 @@ impl IntoResponse for AppError {
 pub fn match_error(error: &AppError) -> (&str, String, StatusCode) {
     match error {
         AppError::DbError(e) => match e {
-            DbError::Conflict => (
-                "Conflict",
-                "Outdated resource".into(),
-                StatusCode::CONFLICT,
-            ),
+            DbError::Conflict => ("Conflict", "Outdated resource".into(), StatusCode::CONFLICT),
             DbError::NotFound => (
                 "Not found",
                 "DB Entry not found".into(),

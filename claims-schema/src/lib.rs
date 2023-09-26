@@ -1,27 +1,20 @@
+use claims_core::schema_name_impl;
+
 pub mod protos;
 
-pub const SCHEMA_NAME_CLAIM: &str = "Claim";
+use protos::claim::Claim;
 
-pub const RAW_SCHEMA_CLAIM: &str = include_str!("../resources/protos/claim.proto");
+use claims_core::proto_encode::message::SchemaName;
 
+const CLAIMS_SCHEMA: &str = "claims.schema.";
 
-pub const SCHEMA_NAME_CLAIM_STATUS: &str = "ClaimStatus";
-
-pub const RAW_SCHEMA_CLAIM_STATUS: &str = include_str!("../resources/protos/claimStatus.proto");
-
-
-pub const SCHEMA_NAME_INCIDENT_STATUS: &str = "IncidentStatus";
-
-pub const RAW_SCHEMA_INCIDENT_STATUS: &str = include_str!("../resources/protos/incidentType.proto");
+schema_name_impl!(CLAIMS_SCHEMA, Claim);
 
 #[cfg(test)]
 mod tests {
     use protobuf::Message;
 
-    use protos::{
-        claimStatus::ClaimStatus,
-        incidentType::IncidentType
-    };
+    use protos::{claimStatus::ClaimStatus, incidentType::IncidentType};
 
     use crate::protos;
 

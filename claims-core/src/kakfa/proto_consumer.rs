@@ -7,7 +7,6 @@ use schema_registry_converter::async_impl::easy_proto_raw::EasyProtoRawDecoder;
 use schema_registry_converter::async_impl::schema_registry::SrSettings;
 use std::future::Future;
 
-// TODO context for auto commit?
 pub struct ProtoConsumer {
     consumer: StreamConsumer,
     proto_decoder: EasyProtoRawDecoder,
@@ -27,10 +26,11 @@ impl ProtoConsumer {
         }
     }
 
-    pub async fn consume<M, Fut>(&self, handler: impl Fn(M) -> Fut) -> anyhow::Result<()>
+    pub async fn consume<M, H, Fut>(&self, handler: H) -> anyhow::Result<()>
     where
         M: Message,
-        Fut: Future<Output = ()>,
+        H: Fn(M) -> Fut,
+        Fut: Future,
     {
         self.consumer
             .subscribe(&[&self.topic])

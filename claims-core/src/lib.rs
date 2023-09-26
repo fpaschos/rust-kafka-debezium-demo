@@ -1,3 +1,4 @@
 pub mod config;
-pub mod kafka;
+pub mod kakfa;
+pub mod proto_encode;
 pub mod tracing;
