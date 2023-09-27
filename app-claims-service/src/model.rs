@@ -10,7 +10,6 @@ pub struct ClaimDb {
     pub incident_type: IncidentType,
 }
 
-
 impl ClaimDb {
     pub fn new<S: AsRef<str>>(claim_no: S, incident_type: IncidentType) -> Self {
         Self {
@@ -21,10 +20,14 @@ impl ClaimDb {
     }
 }
 
-
 impl From<ClaimDb> for Claim {
     fn from(v: ClaimDb) -> Self {
-        let ClaimDb { id, claim_no, incident_type, status } = v;
+        let ClaimDb {
+            id,
+            claim_no,
+            incident_type,
+            status,
+        } = v;
         Self {
             id,
             claim_no,
@@ -33,7 +36,6 @@ impl From<ClaimDb> for Claim {
         }
     }
 }
-
 
 #[derive(sqlx::FromRow)]
 pub struct PartyDb {
@@ -47,7 +49,7 @@ pub struct PartyDb {
 impl PartyDb {
     pub fn new(claim_id: i32, data: PartyData) -> Self {
         Self {
-            id:0,
+            id: 0,
             claim_id,
             r#type: data.r#type(),
             subtype: data.subtype(),
@@ -58,7 +60,13 @@ impl PartyDb {
 
 impl From<PartyDb> for Party {
     fn from(v: PartyDb) -> Self {
-        let PartyDb {id, claim_id, r#type, subtype, data} = v;
+        let PartyDb {
+            id,
+            claim_id,
+            r#type,
+            subtype,
+            data,
+        } = v;
 
         Self {
             id,
@@ -70,7 +78,18 @@ impl From<PartyDb> for Party {
     }
 }
 
-#[derive(Clone, Copy, Default, Serialize, Deserialize, strum::Display, strum::EnumString, sqlx::Type)]
+#[derive(sqlx::FromRow)]
+pub struct ClaimOutboxEventDb {
+    pub id: uuid::Uuid,
+    pub aggregatetype: String,
+    pub aggregateid: String,
+    pub r#type: String,
+    pub payload: Vec<u8>,
+}
+
+#[derive(
+    Clone, Copy, Default, Serialize, Deserialize, strum::Display, strum::EnumString, sqlx::Type,
+)]
 #[strum(serialize_all = "SCREAMING_SNAKE_CASE")]
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
 #[sqlx(type_name = "VARCHAR", rename_all = "SCREAMING_SNAKE_CASE")]
@@ -82,7 +101,9 @@ pub enum ClaimStatus {
     UnderRevision,
 }
 
-#[derive(Clone, Copy, Default, Serialize, Deserialize, strum::Display, strum::EnumString, sqlx::Type)]
+#[derive(
+    Clone, Copy, Default, Serialize, Deserialize, strum::Display, strum::EnumString, sqlx::Type,
+)]
 #[strum(serialize_all = "SCREAMING_SNAKE_CASE")]
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
 #[sqlx(type_name = "VARCHAR", rename_all = "SCREAMING_SNAKE_CASE")]
@@ -93,7 +114,9 @@ pub enum IncidentType {
     RoadAssistance,
 }
 
-#[derive(Clone, Copy, Default, Serialize, Deserialize, strum::Display, strum::EnumString, sqlx::Type)]
+#[derive(
+    Clone, Copy, Default, Serialize, Deserialize, strum::Display, strum::EnumString, sqlx::Type,
+)]
 #[strum(serialize_all = "SCREAMING_SNAKE_CASE")]
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
 #[sqlx(type_name = "VARCHAR", rename_all = "SCREAMING_SNAKE_CASE")]
@@ -103,7 +126,9 @@ pub enum PartyType {
     Vehicle,
 }
 
-#[derive(Clone, Copy, Default, Serialize, Deserialize, strum::Display, strum::EnumString, sqlx::Type)]
+#[derive(
+    Clone, Copy, Default, Serialize, Deserialize, strum::Display, strum::EnumString, sqlx::Type,
+)]
 #[strum(serialize_all = "SCREAMING_SNAKE_CASE")]
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
 #[sqlx(type_name = "VARCHAR", rename_all = "SCREAMING_SNAKE_CASE")]
@@ -142,25 +167,25 @@ pub struct Party {
 
 #[derive(Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-#[serde(tag="type")]
+#[serde(tag = "type")]
 pub enum PartyData {
-    #[serde(rename="PERSON")]
+    #[serde(rename = "PERSON")]
     Person(Person),
-    #[serde(rename="VEHICLE")]
+    #[serde(rename = "VEHICLE")]
     Vehicle(Vehicle),
 }
 
 impl PartyData {
     pub fn r#type(&self) -> PartyType {
         match self {
-            PartyData::Vehicle(_)=> PartyType::Vehicle,
+            PartyData::Vehicle(_) => PartyType::Vehicle,
             PartyData::Person(_) => PartyType::Person,
         }
     }
 
     pub fn subtype(&self) -> PartySubtype {
         match self {
-            PartyData::Vehicle(v)=> v.subtype,
+            PartyData::Vehicle(v) => v.subtype,
             PartyData::Person(v) => v.subtype,
         }
     }

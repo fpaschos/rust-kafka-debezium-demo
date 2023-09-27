@@ -4,4 +4,6 @@ server:
   port: 58080
 db:
   url: postgres://postgres_user:postgres_user@localhost:55432/claimsdb
+schema_registry:
+  url: http://localhost:58003
 graceful-shutdown: 5

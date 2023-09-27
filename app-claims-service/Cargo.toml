@@ -7,14 +7,18 @@ edition = "2021"
 
 [dependencies]
 claims-core = { path = "../claims-core"}
+claims-schema = { path = "../claims-schema" }
 anyhow = "1.0.75"
 axum = "0.6.19"
 rand = "0.8.5"
 serde = { version = "1.0.188", features = ["derive"] }
 serde_json = { version = "1.0.105", features = ["raw_value"] }
-sqlx = { version = "0.7.1", features = ["postgres", "json", "runtime-tokio"] }
+sqlx = { version = "0.7.1", features = ["postgres", "json", "uuid", "runtime-tokio"] }
 strum = { version = "0.25.0", features = ["derive"] }
 tokio = { version = "1.32.0", features = ["rt-multi-thread", "macros", "signal"] }
 tracing = "0.1.37"
 tracing-subscriber = { version = "0.3.17", features = ["env-filter", "fmt", "json"] }
+uuid = "1.4.1"
+
+schema_registry_converter = {version  = "3.1.0" , features = ["easy", "proto_raw"]}
 

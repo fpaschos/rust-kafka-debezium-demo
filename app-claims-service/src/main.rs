@@ -2,24 +2,26 @@ use std::net::SocketAddr;
 use std::sync::Arc;
 use std::time::Duration;
 
-use anyhow::Context;
-use axum::{Extension, Router};
-use axum::routing::get;
-use sqlx::{Executor, PgPool};
-use sqlx::postgres::PgPoolOptions;
-use crate::common::api::{ApiContext, health};
+use crate::common::api::{health, ApiContext};
 use crate::config::AppConfig;
+use crate::service::event_service::EventService;
+use anyhow::Context;
+use axum::routing::get;
+use axum::{Extension, Router};
+use sqlx::postgres::PgPoolOptions;
+use sqlx::{Executor, PgPool};
 
-mod config;
-mod common;
-mod model;
-mod db;
-mod service;
 mod api;
+mod common;
+mod config;
+mod db;
+mod model;
+mod service;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
-    let config: AppConfig = claims_core::config::load(&"./config/application.yml").context("Unable to load config")?;
+    let config: AppConfig =
+        claims_core::config::load(&"./config/application.yml").context("Unable to load config")?;
     let config = Arc::new(config);
     claims_core::tracing::setup_tracing(&config.log)?;
 
@@ -29,13 +31,14 @@ async fn main() -> anyhow::Result<()> {
         .acquire_timeout(Duration::from_secs(5))
         // This allows us to select which schema to use
         // see: https://docs.rs/sqlx/latest/sqlx/pool/struct.PoolOptions.html#method.after_connect
-        .after_connect(|conn, _meta| Box::pin(async move {
-            // When directly invoking `Executor` methods,
-            // it is possible to execute multiple statements with one call.
-            conn.execute("SET search_path = 'claims';")
-                .await?;
-            Ok(())
-        }))
+        .after_connect(|conn, _meta| {
+            Box::pin(async move {
+                // When directly invoking `Executor` methods,
+                // it is possible to execute multiple statements with one call.
+                conn.execute("SET search_path = 'claims';").await?;
+                Ok(())
+            })
+        })
         .connect(&config.db.url)
         .await
         .context("Unable to connect to database")?;
@@ -45,18 +48,20 @@ async fn main() -> anyhow::Result<()> {
         .await
         .context("Unable to exec db migrations")?;
 
-
-    start_web_server(&config, &db).await.context("Unable to start web server")?;
+    start_web_server(config, &db)
+        .await
+        .context("Unable to start web server")?;
 
     Ok(())
 }
 
 /// Starts the web server given a config [`config::Server`]
-pub async fn start_web_server(config: &Arc<config::AppConfig>, db: &PgPool) -> anyhow::Result<()> {
+pub async fn start_web_server(config: Arc<AppConfig>, db: &PgPool) -> anyhow::Result<()> {
     // Initialize context
     let context = ApiContext {
         config: config.clone(),
         db: db.clone(),
+        events: EventService::new(&config.schema_registry.url),
     };
 
     // Initialize routing

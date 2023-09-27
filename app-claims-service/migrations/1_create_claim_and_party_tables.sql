@@ -26,3 +26,5 @@ CREATE TABLE IF NOT EXISTS party
 -- Needed for debezium previous state capture see above
 ALTER TABLE party REPLICA IDENTITY FULL;
 
+
+

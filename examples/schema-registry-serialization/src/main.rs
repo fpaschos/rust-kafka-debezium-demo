@@ -20,8 +20,6 @@ use tracing_subscriber::fmt::Subscriber;
 use claims_schema::protos::claim::Claim;
 use claims_schema::protos::claimStatus::ClaimStatus::OPEN;
 
-// TODO keep only main here and move all the finalized code to claims-core lib project
-
 // Example message handler
 #[derive(Clone, Default)]
 struct CountingMessageHandler {
