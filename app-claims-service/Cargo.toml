@@ -7,7 +7,7 @@ edition = "2021"
 
 [dependencies]
 claims-core = { path = "../claims-core"}
-claims-schema = { path = "../claims-schema" }
+claims-model = { path = "../claims-model", features = ["sqlx", "proto"] }
 anyhow = "1.0.75"
 axum = "0.6.19"
 rand = "0.8.5"

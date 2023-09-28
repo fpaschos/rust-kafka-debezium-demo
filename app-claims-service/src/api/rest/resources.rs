@@ -1,5 +1,5 @@
+use claims_model::model::{ClaimStatus, IncidentType, PartyData};
 use serde::{Deserialize, Serialize};
-use crate::model::{ClaimStatus, IncidentType, PartyData};
 #[derive(Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct CreateClaim {
@@ -15,7 +15,7 @@ pub struct UpdateClaim {
 
 #[derive(Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct CreateParty{
+pub struct CreateParty {
     pub data: PartyData,
 }
 

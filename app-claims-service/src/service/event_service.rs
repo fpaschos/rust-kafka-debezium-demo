@@ -1,9 +1,9 @@
 use crate::db::events::send_event;
 use crate::db::PostgresTx;
-use crate::model::{Claim, ClaimOutboxEventDb};
+use crate::model::ClaimOutboxEventDb;
 use claims_core::proto_encode::encoder::ProtoEncoder;
 use claims_core::proto_encode::message::MessageKeyPair;
-use claims_schema::protos;
+use claims_model::model::{proto, Claim};
 use schema_registry_converter::async_impl::easy_proto_raw::EasyProtoRawEncoder;
 use schema_registry_converter::async_impl::schema_registry::SrSettings;
 use std::sync::Arc;
@@ -24,7 +24,7 @@ impl EventService {
     pub async fn send_claim(&self, tx: &mut PostgresTx<'_>, claim: &Claim) -> anyhow::Result<()> {
         // Create the protobuf message from Claim
 
-        let proto: protos::claim::Claim = claim.clone().into();
+        let proto: proto::claim::Claim = claim.clone().into();
 
         // Encode the protobuf
         let encoded = self

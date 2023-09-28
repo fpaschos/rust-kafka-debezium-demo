@@ -2,10 +2,11 @@ use crate::api::rest::resources::{CreateClaim, CreateParty, UpdateClaim, UpdateP
 use crate::common::api::ApiContext;
 use crate::common::error::AppError;
 use crate::common::error::DbError::NotFound;
-use crate::model::{Claim, ClaimDb, Party, PartyDb};
+use crate::model::{ClaimDb, PartyDb};
 use crate::{common, db};
 use axum::extract::Path;
 use axum::{Extension, Json};
+use claims_model::model::{Claim, Party};
 // TODO add proper validation to all update endpoints
 // TODO refactor endpoint internals to be reusable for other apis eg. grpc, graphql etc...
 // TODO update_party should not change the type of a party, only the subtype validation

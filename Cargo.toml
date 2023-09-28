@@ -4,12 +4,14 @@ members = [
     "examples/*",
     "claims-core",
     "claims-schema",
+    "claims-model",
     "app-claims-service",
     "app-claims-version-service"
 ]
 
 default-members = [
     "claims-core",
+    "claims-model",
     "claims-schema",
     "app-*"
 ]

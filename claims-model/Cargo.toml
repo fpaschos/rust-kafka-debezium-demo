@@ -1,0 +1,18 @@
+[package]
+name = "claims-model"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+claims-schema = { path="../claims-schema", optional = true}
+sqlx = { version = "0.7.1", features = ["json", "uuid"], optional = true }
+
+# Non optional dependences
+strum = { version = "0.25.0", features = ["derive"] }
+serde = { version = "1.0.188", features = ["derive"] }
+
+[features]
+proto = ["dep:claims-schema"]
+sqlx = ["dep:sqlx"]
