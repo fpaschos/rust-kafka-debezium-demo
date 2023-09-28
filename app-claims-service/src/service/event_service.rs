@@ -23,19 +23,14 @@ impl EventService {
     }
     pub async fn send_claim(&self, tx: &mut PostgresTx<'_>, claim: &Claim) -> anyhow::Result<()> {
         // Create the protobuf message from Claim
-        let proto = protos::claim::Claim {
-            id: claim.id,
-            claim_no: claim.claim_no.clone(),
-            status: Default::default(),
-            incident_type: Default::default(),
-            special_fields: Default::default(),
-        };
+
+        let proto: protos::claim::Claim = claim.clone().into();
 
         // Encode the protobuf
         let encoded = self
             .proto_encoder
             .encode_topic_name_raw_key(
-                "claims.test", // TODO what goes here
+                "claimsdb.claim.events", // TODO what goes here
                 MessageKeyPair(&proto, proto.id.to_string().as_bytes()),
             )
             .await?;
@@ -43,7 +38,7 @@ impl EventService {
         // Send the message via the outbox table
         let event = ClaimOutboxEventDb {
             id: Default::default(),
-            aggregatetype: "claims".into(),
+            aggregatetype: "claim".into(),
             aggregateid: claim.id.to_string(),
             r#type: "update".into(),
             payload: encoded.payload().into(),

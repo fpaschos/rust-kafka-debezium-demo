@@ -37,9 +37,12 @@ pub async fn update_claim(
     e.incident_type = incident_type;
 
     let entity = db::claims::update(&mut tx, e).await?;
-    tx.commit().await?;
 
     let claim: Claim = entity.into();
+    context.events.send_claim(&mut tx, &claim).await?;
+
+    tx.commit().await?;
+
     Ok(claim.into())
 }
 

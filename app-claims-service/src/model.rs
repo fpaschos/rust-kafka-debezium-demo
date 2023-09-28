@@ -88,7 +88,15 @@ pub struct ClaimOutboxEventDb {
 }
 
 #[derive(
-    Clone, Copy, Default, Serialize, Deserialize, strum::Display, strum::EnumString, sqlx::Type,
+    Clone,
+    Copy,
+    Debug,
+    Default,
+    Serialize,
+    Deserialize,
+    strum::Display,
+    strum::EnumString,
+    sqlx::Type,
 )]
 #[strum(serialize_all = "SCREAMING_SNAKE_CASE")]
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
@@ -102,7 +110,15 @@ pub enum ClaimStatus {
 }
 
 #[derive(
-    Clone, Copy, Default, Serialize, Deserialize, strum::Display, strum::EnumString, sqlx::Type,
+    Clone,
+    Copy,
+    Debug,
+    Default,
+    Serialize,
+    Deserialize,
+    strum::Display,
+    strum::EnumString,
+    sqlx::Type,
 )]
 #[strum(serialize_all = "SCREAMING_SNAKE_CASE")]
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
@@ -146,7 +162,7 @@ pub enum PartySubtype {
 }
 
 // API Common Model
-#[derive(Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Claim {
     pub id: i32,

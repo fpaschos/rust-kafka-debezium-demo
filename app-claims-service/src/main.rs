@@ -16,6 +16,7 @@ mod common;
 mod config;
 mod db;
 mod model;
+mod proto_conversions;
 mod service;
 
 #[tokio::main]
