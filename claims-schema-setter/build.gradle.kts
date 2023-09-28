@@ -34,14 +34,23 @@ schemaRegistry {
     quiet = true
 
     register {
+        // Register schema for each entity separately
         subject("claimStatus", protosPath + "claimStatus.proto", "PROTOBUF")
         subject("incidentType", protosPath + "incidentType.proto", "PROTOBUF")
-        subject("claims.test-value", protosPath + "claim.proto", "PROTOBUF")
-            .addReference("claimStatus", "claimStatus", -1)
-            .addReference("incidentType", "incidentType", -1)
         subject("claim", protosPath + "claim.proto", "PROTOBUF")
             .addReference("claimStatus", "claimStatus", -1)
             .addReference("incidentType", "incidentType", -1)
+
+        // Register schema for test topic "claims.test-value"
+        subject("claims.test-value", protosPath + "claim.proto", "PROTOBUF")
+            .addReference("claimStatus", "claimStatus", -1)
+            .addReference("incidentType", "incidentType", -1)
+
+        // Register schema for test topic "claimsdb.claim.events" outbox table topic
+        subject("claimsdb.claim.events-value", protosPath + "claim.proto", "PROTOBUF")
+            .addReference("claimStatus", "claimStatus", -1)
+            .addReference("incidentType", "incidentType", -1)
+
     }
 
 
