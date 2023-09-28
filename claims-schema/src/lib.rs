@@ -6,6 +6,7 @@ use protos::claim::Claim;
 
 use claims_core::proto_encode::message::SchemaName;
 
+// Needed for correctly using proto_encoder
 const CLAIMS_SCHEMA: &str = "claims.schema.";
 
 schema_name_impl!(CLAIMS_SCHEMA, Claim);
@@ -30,7 +31,5 @@ mod tests {
         let serialized = input.write_to_bytes().unwrap();
         let output = protos::claim::Claim::parse_from_bytes(&serialized).unwrap();
         assert_eq!(input, output);
-
-        // println!("Claim data {:?}", &output);
     }
 }

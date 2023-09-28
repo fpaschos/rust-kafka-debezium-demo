@@ -78,7 +78,7 @@ impl From<PartyDb> for Party {
     }
 }
 
-#[derive(sqlx::FromRow)]
+#[derive(Default, sqlx::FromRow)]
 pub struct ClaimOutboxEventDb {
     pub id: uuid::Uuid,
     pub aggregatetype: String,

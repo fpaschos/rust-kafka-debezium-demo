@@ -6,8 +6,8 @@
 //!
 //! Note a running instance of schema registry is required with the available schemas registered.
 use anyhow::Context;
-use claims_core::kakfa::proto_consumer;
-use claims_core::kakfa::proto_producer;
+use claims_core::kafka::proto_consumer;
+use claims_core::kafka::proto_producer;
 use claims_core::proto_encode::encoder::ProtoEncoder;
 use claims_core::proto_encode::message::MessageKeyPair;
 

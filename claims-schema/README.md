@@ -1,2 +1,2 @@
 ### Claims schema
-Contains protobuf definitions for claims common model. 
+Contains protobuf definitions for claims model. 

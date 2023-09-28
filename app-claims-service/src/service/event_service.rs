@@ -30,18 +30,18 @@ impl EventService {
         let encoded = self
             .proto_encoder
             .encode_topic_name_raw_key(
-                "claimsdb.claim.events", // TODO what goes here
+                "claimsdb.claim.events",
                 MessageKeyPair(&proto, proto.id.to_string().as_bytes()),
             )
             .await?;
 
         // Send the message via the outbox table
         let event = ClaimOutboxEventDb {
-            id: Default::default(),
             aggregatetype: "claim".into(),
             aggregateid: claim.id.to_string(),
             r#type: "update".into(),
             payload: encoded.payload().into(),
+            ..Default::default()
         };
         let _ = send_event(tx, event).await?;
         Ok(())
