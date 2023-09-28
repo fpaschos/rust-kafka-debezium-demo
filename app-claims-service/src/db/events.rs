@@ -1,5 +1,5 @@
+use crate::db::entities::ClaimOutboxEventDb;
 use crate::db::PostgresTx;
-use crate::model::ClaimOutboxEventDb;
 
 pub async fn send_event<E: Into<ClaimOutboxEventDb>>(
     tx: &mut PostgresTx<'_>,

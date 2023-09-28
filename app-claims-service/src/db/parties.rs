@@ -1,5 +1,5 @@
+use crate::db::entities::PartyDb;
 use crate::db::PostgresTx;
-use crate::model::PartyDb;
 use sqlx::{Executor, Postgres};
 
 pub async fn fetch_one(

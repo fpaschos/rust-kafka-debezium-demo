@@ -15,7 +15,6 @@ mod api;
 mod common;
 mod config;
 mod db;
-mod model;
 mod service;
 
 #[tokio::main]

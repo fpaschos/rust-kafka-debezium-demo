@@ -1,5 +1,5 @@
+use crate::db::entities::ClaimDb;
 use crate::db::PostgresTx;
-use crate::model::ClaimDb;
 use sqlx::{Executor, Postgres};
 
 // For implementation details of these functions

@@ -1,6 +1,6 @@
+use crate::db::entities::ClaimOutboxEventDb;
 use crate::db::events::send_event;
 use crate::db::PostgresTx;
-use crate::model::ClaimOutboxEventDb;
 use claims_core::proto_encode::encoder::ProtoEncoder;
 use claims_core::proto_encode::message::MessageKeyPair;
 use claims_model::model::{proto, Claim};

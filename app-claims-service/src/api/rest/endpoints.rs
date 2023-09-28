@@ -2,7 +2,7 @@ use crate::api::rest::resources::{CreateClaim, CreateParty, UpdateClaim, UpdateP
 use crate::common::api::ApiContext;
 use crate::common::error::AppError;
 use crate::common::error::DbError::NotFound;
-use crate::model::{ClaimDb, PartyDb};
+use crate::db::entities::{ClaimDb, PartyDb};
 use crate::{common, db};
 use axum::extract::Path;
 use axum::{Extension, Json};
