@@ -14,7 +14,7 @@
     "transforms": "outbox",
     "transforms.outbox.type": "io.debezium.transforms.outbox.EventRouter",
     "transforms.outbox.table.fields.additional.placement" : "type:header:type",
-    "transforms.outbox.route.topic.replacement" : "${routedByValue}.events",
+    "transforms.outbox.route.topic.replacement" : "claimsdb.${routedByValue}.events",
     "value.converter": "io.debezium.converters.BinaryDataConverter",
     "value.converter.delegate.converter.type": "org.apache.kafka.connect.json.JsonConverter",
     "value.converter.delegate.converter.type.schemas.enable": false,

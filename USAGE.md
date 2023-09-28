@@ -19,14 +19,15 @@ docker compose down
 
 After successful start up (or after any tear down)
 
-
-Register claims schema no schema converter postgres connector
+Register schemas to schema registry
 ```bash
-curl -i -X POST \
-  -H "Accept:application/json" \
-  -H  "Content-Type:application/json" \
-  http://localhost:58083/connectors/ \
-  -d @conf/kafka-connect/register-claims-postgres-outbox-connector.json
+./scripts/publish-claims-schemas.sh
+
+```
+
+Register claims outbox postgres connector
+```bash
+./scripts/register-claims-outbox-connector.sh
 ```
 
 
