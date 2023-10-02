@@ -1,28 +1,41 @@
 use config::Config;
 use serde::de::DeserializeOwned;
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
 
-#[derive(Debug, Default, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Debug, Deserialize)]
 pub struct Log {
+    pub level: LogLevel,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct LogLevel {
+    pub root: Option<String>,
+    pub directives: Vec<LogDirective>,
+}
+
+#[derive(Debug, Deserialize)]
+#[allow(unused)]
+pub struct LogDirective {
+    pub namespace: String,
     pub level: String,
 }
 
-#[derive(Debug, Default, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Debug, Deserialize)]
 pub struct Database {
     pub url: String,
 }
 
-#[derive(Debug, Default, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Debug, Deserialize)]
 pub struct Server {
     pub port: u16,
 }
 
-#[derive(Debug, Default, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Debug, Deserialize)]
 pub struct SchemaRegistry {
     pub url: String,
 }
 
-#[derive(Debug, Default, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Debug, Deserialize)]
 pub struct Kafka {
     pub brokers: String,
 }

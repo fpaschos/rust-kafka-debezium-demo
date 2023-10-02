@@ -1,6 +1,13 @@
-log:
-  level: INFO
+
 schema_registry:
   url: http://localhost:58003
 kafka:
   brokers: localhost:59092
+log:
+  level:
+    root: warn
+    directives:
+      - namespace: app_claims_version_service
+        level: debug
+      - namespace: sqlx::query
+        level: info

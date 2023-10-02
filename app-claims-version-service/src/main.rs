@@ -2,7 +2,7 @@ use anyhow::Context;
 use tokio::task::JoinHandle;
 
 use claims_core::kafka::proto_consumer;
-use claims_core::tracing::setup_tracing;
+use claims_core::tracing::init;
 use claims_model::model::proto::claim::Claim;
 
 use crate::config::AppConfig;
@@ -14,7 +14,7 @@ mod config;
 async fn main() -> anyhow::Result<()> {
     let config: AppConfig =
         claims_core::config::load("./config/application.yml").context("Unable to load config")?;
-    setup_tracing(&config.log)?;
+    init(&config.log)?;
 
     tokio::select! {
         res = spawn_claims_consumer(&config) => {
@@ -32,8 +32,7 @@ pub struct ClaimsHandler;
 
 impl ClaimsHandler {
     pub async fn handle(&self, claim: Claim) -> anyhow::Result<()> {
-        tracing::info!("Consumed claim: {}", claim);
-        // anyhow::bail!("test");
+        tracing::debug!("Consumed claim: {}", claim);
         Ok(())
     }
 }

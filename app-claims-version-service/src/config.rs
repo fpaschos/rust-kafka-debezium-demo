@@ -1,7 +1,7 @@
 use claims_core::config::{Kafka, Log, SchemaRegistry};
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
 
-#[derive(Debug, Default, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Debug, Deserialize)]
 pub struct AppConfig {
     pub log: Log,
     pub schema_registry: SchemaRegistry,
