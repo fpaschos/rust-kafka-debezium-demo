@@ -1,0 +1,69 @@
+{
+	"info": {
+		"_postman_id": "6a585b2e-d970-4059-a517-11806678a590",
+		"name": "kd-demo",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "30085929"
+	},
+	"item": [
+		{
+			"name": "Create claim",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"incidentType\": \"OTHER_DAMAGE\"\n}"
+				},
+				"url": {
+					"raw": "http://localhost:58080/claims",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "58080",
+					"path": [
+						"claims"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Update claim",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"incidentType\": \"OTHER_DAMAGE\",\n    \"status\": \"CLOSED\"\n}"
+				},
+				"url": {
+					"raw": "http://localhost:58080/claims/1",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "58080",
+					"path": [
+						"claims",
+						"1"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
