@@ -2,7 +2,6 @@ use crate::config;
 use tracing_subscriber::prelude::__tracing_subscriber_SubscriberExt;
 use tracing_subscriber::EnvFilter;
 
-// TODO configure app log level (using config) and modules log level
 pub fn init(config: &config::Log) -> anyhow::Result<()> {
     Ok(init_log_and_tracing(|mut e| {
         // Configure root level

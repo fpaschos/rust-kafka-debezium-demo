@@ -9,5 +9,7 @@ log:
     directives:
       - namespace: app_claims_version_service
         level: debug
+      - namespace: claims_core
+        level: warn
       - namespace: sqlx::query
         level: info

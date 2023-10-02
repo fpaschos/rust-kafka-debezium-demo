@@ -36,9 +36,8 @@ impl ProtoConsumer {
             .subscribe(&[&self.topic])
             .context(format!("Can't subscribe to topic {}", self.topic))?;
 
-        // TODO handle kafka error
         while let Ok(message) = self.consumer.recv().await {
-            tracing::info!("Begin handling message {}", message.offset());
+            tracing::trace!("Begin handling message {}", message.offset());
 
             let decoded_payload = self.proto_decoder.decode(message.payload()).await?;
             let decoded_payload = decoded_payload.ok_or(anyhow!("Unable to decode payload"))?;
@@ -51,6 +50,7 @@ impl ProtoConsumer {
             self.consumer.commit_message(&message, CommitMode::Async)?;
         }
 
+        // TODO handle kafka error - we end up here only if the stream is closed or there is a kafka error (return error?)
         Ok(())
     }
 }
