@@ -14,7 +14,7 @@ tracing-subscriber = { version = "0.3.17", features = ["env-filter", "fmt", "jso
 
 async-trait = "0.1.73"
 
-
+tokio = { version = "1.32.0", features = ["signal"] }
 
 rdkafka = "0.34.0"
 protobuf = "3.2.0"

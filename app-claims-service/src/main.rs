@@ -71,7 +71,7 @@ pub async fn start_web_server(config: Arc<AppConfig>, db: &PgPool) -> anyhow::Re
     tracing::info!("Rest server listening on {addr}");
     axum::Server::bind(&addr)
         .serve(routing.into_make_service_with_connect_info::<SocketAddr>())
-        .with_graceful_shutdown(common::server::shutdown_signal())
+        .with_graceful_shutdown(claims_core::shutdown::shutdown_signal())
         .await?;
 
     Ok(())

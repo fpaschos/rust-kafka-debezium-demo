@@ -30,7 +30,7 @@ impl ProtoConsumer {
     where
         M: Message,
         H: Fn(M) -> Fut,
-        Fut: Future,
+        Fut: Future<Output = anyhow::Result<()>>,
     {
         self.consumer
             .subscribe(&[&self.topic])
@@ -45,7 +45,7 @@ impl ProtoConsumer {
 
             let parsed_payload = Message::parse_from_bytes(&decoded_payload.bytes)?;
 
-            handler(parsed_payload).await;
+            handler(parsed_payload).await?;
 
             // Commit the offsets
             self.consumer.commit_message(&message, CommitMode::Async)?;

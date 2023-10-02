@@ -28,9 +28,10 @@ struct CountingMessageHandler {
 
 impl CountingMessageHandler {
     #[allow(dead_code)]
-    pub async fn handle_message(&self, claim: Claim) {
+    pub async fn handle_message(&self, claim: Claim) -> anyhow::Result<()> {
         let c = self.counter.fetch_add(1, Ordering::SeqCst);
         tracing::info!("Counter = {} Consumed {}", c, claim);
+        Ok(())
     }
 }
 

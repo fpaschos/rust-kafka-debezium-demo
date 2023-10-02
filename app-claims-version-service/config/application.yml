@@ -1,2 +1,6 @@
 log:
   level: INFO
+schema_registry:
+  url: http://localhost:58003
+kafka:
+  brokers: localhost:59092

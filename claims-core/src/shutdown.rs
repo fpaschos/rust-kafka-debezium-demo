@@ -7,8 +7,7 @@ pub async fn shutdown_signal() {
             .expect("Initialization of Ctrl+C handler failed");
     };
 
-    #[cfg(unix)]
-        let terminate = async {
+    let terminate = async {
         tokio::signal::unix::signal(tokio::signal::unix::SignalKind::terminate())
             .expect("Initialization of signal handler failed")
             .recv()

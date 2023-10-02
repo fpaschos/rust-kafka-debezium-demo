@@ -22,7 +22,6 @@ After successful start up (or after any tear down)
 Register schemas to schema registry
 ```bash
 ./scripts/publish-claims-schemas.sh
-
 ```
 
 Register claims outbox postgres connector
