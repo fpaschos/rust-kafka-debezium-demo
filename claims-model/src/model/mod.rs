@@ -56,7 +56,9 @@ pub struct Claim {
 // </editor-fold>
 
 // <editor-fold desc="Party models">
-#[derive(Clone, Copy, Default, Serialize, Deserialize, strum::Display, strum::EnumString)]
+#[derive(
+    Clone, Copy, Debug, Default, Serialize, Deserialize, strum::Display, strum::EnumString,
+)]
 #[strum(serialize_all = "SCREAMING_SNAKE_CASE")]
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
 #[cfg_attr(feature = "sqlx", derive(sqlx::Type))]
@@ -70,7 +72,9 @@ pub enum PartyType {
     Vehicle,
 }
 
-#[derive(Clone, Copy, Default, Serialize, Deserialize, strum::Display, strum::EnumString)]
+#[derive(
+    Clone, Copy, Debug, Default, Serialize, Deserialize, strum::Display, strum::EnumString,
+)]
 #[strum(serialize_all = "SCREAMING_SNAKE_CASE")]
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
 #[cfg_attr(feature = "sqlx", derive(sqlx::Type))]
@@ -91,7 +95,7 @@ pub enum PartySubtype {
     Other,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Party {
     pub id: i32,
@@ -99,6 +103,16 @@ pub struct Party {
     pub r#type: PartyType,
     pub subtype: PartySubtype,
     pub data: PartyData,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+#[serde(tag = "type")]
+pub enum PartyData {
+    #[serde(rename = "PERSON")]
+    Person(Person),
+    #[serde(rename = "VEHICLE")]
+    Vehicle(Vehicle),
 }
 
 impl PartyData {
@@ -117,24 +131,14 @@ impl PartyData {
     }
 }
 
-#[derive(Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-#[serde(tag = "type")]
-pub enum PartyData {
-    #[serde(rename = "PERSON")]
-    Person(Person),
-    #[serde(rename = "VEHICLE")]
-    Vehicle(Vehicle),
-}
-
-#[derive(Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Person {
     pub subtype: PartySubtype,
     pub name: String,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Vehicle {
     pub subtype: PartySubtype,

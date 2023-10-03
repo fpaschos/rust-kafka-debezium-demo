@@ -3,7 +3,7 @@ use crate::db::events::send_event;
 use crate::db::PostgresTx;
 use claims_core::proto_encode::encoder::ProtoEncoder;
 use claims_core::proto_encode::message::MessageKeyPair;
-use claims_model::model::{proto, Claim};
+use claims_model::model::{proto, Claim, Party};
 use schema_registry_converter::async_impl::easy_proto_raw::EasyProtoRawEncoder;
 use schema_registry_converter::async_impl::schema_registry::SrSettings;
 use std::sync::Arc;
@@ -26,7 +26,7 @@ impl EventService {
 
         let proto: proto::claim::Claim = claim.clone().into();
 
-        // Encode the protobuf
+        // Encode the protobuf key is claim id as string
         let encoded = self
             .proto_encoder
             .encode_topic_name_raw_key(
@@ -39,6 +39,32 @@ impl EventService {
         let event = ClaimOutboxEventDb {
             aggregatetype: "claim".into(),
             aggregateid: claim.id.to_string(),
+            r#type: "update".into(),
+            payload: encoded.payload().into(),
+            ..Default::default()
+        };
+        let _ = send_event(tx, event).await?;
+        Ok(())
+    }
+
+    pub async fn send_party(&self, tx: &mut PostgresTx<'_>, party: &Party) -> anyhow::Result<()> {
+        // Create the protobuf message from Claim
+
+        let proto: proto::party::Party = party.clone().into();
+
+        // Encode the protobuf key is claim id as string
+        let encoded = self
+            .proto_encoder
+            .encode_topic_name_raw_key(
+                "claimsdb.party.events",
+                MessageKeyPair(&proto, proto.claim_id.to_string().as_bytes()),
+            )
+            .await?;
+
+        // Send the message via the outbox table
+        let event = ClaimOutboxEventDb {
+            aggregatetype: "party".into(),
+            aggregateid: party.claim_id.to_string(), // Key is party claim_id
             r#type: "update".into(),
             payload: encoded.payload().into(),
             ..Default::default()

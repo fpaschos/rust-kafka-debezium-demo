@@ -83,30 +83,11 @@ pub async fn add_party(
     let party = PartyDb::new(claim.id, data);
     let party = db::parties::create(&mut tx, party).await?;
 
-    tx.commit().await?;
-
     let party: Party = party.into();
-    Ok(party.into())
-}
-
-pub async fn remove_party(
-    Extension(context): Extension<ApiContext>,
-    Path((claim_id, party_id)): Path<(i32, i32)>,
-) -> Result<Json<Party>, AppError> {
-    let mut tx = context.db.begin().await?;
-    // Validate that the claim exists
-    db::claims::fetch_one(&context.db, claim_id)
-        .await?
-        .ok_or(AppError::DbError(NotFound))?;
-
-    let party = db::parties::fetch_one(&context.db, party_id)
-        .await?
-        .ok_or(AppError::DbError(NotFound))?;
-    let party = db::parties::delete(&mut tx, party).await?;
+    context.events.send_party(&mut tx, &party).await?;
 
     tx.commit().await?;
 
-    let party: Party = party.into();
     Ok(party.into())
 }
 
@@ -131,6 +112,30 @@ pub async fn update_party(
     party.data = sqlx::types::Json(data);
 
     let party = db::parties::update(&mut tx, party).await?;
+
+    let party: Party = party.into();
+    context.events.send_party(&mut tx, &party).await?;
+
+    tx.commit().await?;
+
+    Ok(party.into())
+}
+
+// TODO send message party delete (outbox)
+pub async fn remove_party(
+    Extension(context): Extension<ApiContext>,
+    Path((claim_id, party_id)): Path<(i32, i32)>,
+) -> Result<Json<Party>, AppError> {
+    let mut tx = context.db.begin().await?;
+    // Validate that the claim exists
+    db::claims::fetch_one(&context.db, claim_id)
+        .await?
+        .ok_or(AppError::DbError(NotFound))?;
+
+    let party = db::parties::fetch_one(&context.db, party_id)
+        .await?
+        .ok_or(AppError::DbError(NotFound))?;
+    let party = db::parties::delete(&mut tx, party).await?;
 
     tx.commit().await?;
 

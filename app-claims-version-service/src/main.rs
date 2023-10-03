@@ -4,6 +4,7 @@ use tokio::task::JoinHandle;
 use claims_core::kafka::proto_consumer;
 use claims_core::tracing::init;
 use claims_model::model::proto::claim::Claim;
+use claims_model::model::proto::party::Party;
 
 use crate::config::AppConfig;
 
@@ -22,6 +23,11 @@ async fn main() -> anyhow::Result<()> {
                 tracing::error!("{}",error);
             }
         },
+        res = spawn_parties_consumer(&config) => {
+            if let Ok(Err(error)) = res {
+                tracing::error!("{}",error);
+            }
+        },
         _ = claims_core::shutdown::shutdown_signal() => {},
     }
 
@@ -32,7 +38,7 @@ pub struct ClaimsHandler;
 
 impl ClaimsHandler {
     pub async fn handle(&self, claim: Claim) -> anyhow::Result<()> {
-        tracing::debug!("Consumed claim: {}", claim);
+        tracing::debug!("Processing claim: {}", claim);
         Ok(())
     }
 }
@@ -46,6 +52,34 @@ pub fn spawn_claims_consumer(config: &AppConfig) -> JoinHandle<anyhow::Result<()
     );
 
     let handler = ClaimsHandler;
+
+    // Spawn a task to consume messages
+    let consumer = tokio::spawn(async move {
+        consumer
+            .consume(|c| async { handler.handle(c).await })
+            .await
+    });
+    consumer
+}
+
+pub struct PartiesHandler;
+
+impl PartiesHandler {
+    pub async fn handle(&self, party: Party) -> anyhow::Result<()> {
+        tracing::debug!("Processing party: {}", party);
+        Ok(())
+    }
+}
+
+pub fn spawn_parties_consumer(config: &AppConfig) -> JoinHandle<anyhow::Result<()>> {
+    let consumer = proto_consumer::get_consumer(
+        config.kafka.brokers.as_ref(),
+        config.schema_registry.url.as_ref(),
+        "app-claim-version",
+        "claimsdb.party.events",
+    );
+
+    let handler = PartiesHandler;
 
     // Spawn a task to consume messages
     let consumer = tokio::spawn(async move {

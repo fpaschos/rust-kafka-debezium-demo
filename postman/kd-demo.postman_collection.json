@@ -64,6 +64,68 @@
 				}
 			},
 			"response": []
+		},
+		{
+			"name": "Add party person",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"data\": {\n        \"type\": \"PERSON\",\n        \"subtype\": \"DRIVER\",\n        \"name\": \"John Smith\"\n    }\n}"
+				},
+				"url": {
+					"raw": "http://localhost:58080/claims/1/parties",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "58080",
+					"path": [
+						"claims",
+						"1",
+						"parties"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Add party vehicle",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"data\": {\n        \"type\": \"VEHICLE\",\n        \"subtype\": \"CAR\",\n        \"regNo\": \"ION5555\",\n        \"make\": \"OPEL\",\n        \"model\": \"AGILA\"\n    }\n}"
+				},
+				"url": {
+					"raw": "http://localhost:58080/claims/1/parties",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "58080",
+					"path": [
+						"claims",
+						"1",
+						"parties"
+					]
+				}
+			},
+			"response": []
 		}
 	]
 }
