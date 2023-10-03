@@ -85,7 +85,6 @@ services:
       - DYNAMIC_CONFIG_ENABLED=true
     volumes:
       - ./conf/kafka-ui/conf.yml:/etc/kafkaui/dynamic_config.yaml
-      - ./conf/kafka-ui/protos:/protos
     networks:
       - kd-demo
   debezium-ui:

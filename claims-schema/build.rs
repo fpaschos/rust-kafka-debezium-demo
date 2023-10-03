@@ -11,6 +11,7 @@ fn main() {
             "resources/protos/claim.proto",
             "resources/protos/claimStatus.proto",
             "resources/protos/incidentType.proto",
+            "resources/protos/party.proto",
         ])
         // .customize_callback(GenSerde)
         .run_from_script();

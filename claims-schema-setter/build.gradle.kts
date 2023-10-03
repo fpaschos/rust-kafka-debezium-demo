@@ -38,22 +38,22 @@ schemaRegistry {
         subject("claimStatus", protosPath + "claimStatus.proto", "PROTOBUF")
         subject("incidentType", protosPath + "incidentType.proto", "PROTOBUF")
         subject("claim", protosPath + "claim.proto", "PROTOBUF")
-            .addReference("claimStatus", "claimStatus", -1)
-            .addReference("incidentType", "incidentType", -1)
+            .addReference("claimStatus.proto", "claimStatus", -1)
+            .addReference("incidentType.proto", "incidentType", -1)
 
         // Register schema for test topic "claims.test-value"
         subject("claims.test-value", protosPath + "claim.proto", "PROTOBUF")
-            .addReference("claimStatus", "claimStatus", -1)
-            .addReference("incidentType", "incidentType", -1)
+            .addReference("claimStatus.proto", "claimStatus", -1)
+            .addReference("incidentType.proto", "incidentType", -1)
 
         // Register schema for test topic "claimsdb.claim.events" outbox table topic
         subject("claimsdb.claim.events-value", protosPath + "claim.proto", "PROTOBUF")
-            .addReference("claimStatus", "claimStatus", -1)
-            .addReference("incidentType", "incidentType", -1)
+            .addReference("claimStatus.proto", "claimStatus", -1)
+            .addReference("incidentType.proto", "incidentType", -1)
 
+        // Register schema for test topic "claimsdb.claim.events" outbox table topic
+        subject("claimsdb.party.events-value", protosPath + "party.proto", "PROTOBUF")
     }
-
-
 }
 
 group = rootProject.group

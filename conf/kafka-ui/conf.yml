@@ -6,19 +6,7 @@ kafka:
       name: kafka-debezium-demo-1
       properties: {}
       readOnly: false
-#      schemaRegistry: http://schema-registry:8081
-      serde:
-        - name: ProtobufFile
-          properties:
-            # protobufFilesDir specifies root location for proto files (will be scanned recursively)
-            # NOTE: if 'protobufFilesDir' specified, then 'protobufFile' and 'protobufFiles' settings will be ignored
-            protobufFilesDir: "/protos"
-            # protobufMessageName is the default protobuf type that is used to deserialize
-            # the message's value if the topic is not found in protobufMessageNameByTopic.
-            protobufMessageName: Claim
-            protobufMessageNameByTopic:
-              - "claims.test-value": Claim
-
+      schemaRegistry: http://schema-registry:8081
 
 rbac:
   roles: []

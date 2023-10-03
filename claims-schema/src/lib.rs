@@ -4,12 +4,14 @@ pub mod protos;
 
 use protos::claim::Claim;
 
+use crate::protos::party::Party;
 use claims_core::proto_encode::message::SchemaName;
 
 // Needed for correctly using proto_encoder
 const CLAIMS_SCHEMA: &str = "claims.schema.";
 
 schema_name_impl!(CLAIMS_SCHEMA, Claim);
+schema_name_impl!(CLAIMS_SCHEMA, Party);
 
 #[cfg(test)]
 mod tests {
