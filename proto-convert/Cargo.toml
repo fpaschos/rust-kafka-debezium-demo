@@ -1,0 +1,21 @@
+[package]
+name = "proto-convert"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[lib]
+proc-macro = true
+
+[dependencies]
+darling = "0.20.3"
+proc-macro2 = "1.0.67"
+quote = "1.0.33"
+syn = "2.0.37"
+
+[dev-dependencies]
+protobuf = "3.3.0"
+
+[build-dependencies]
+protobuf-codegen = "3.3.0"
