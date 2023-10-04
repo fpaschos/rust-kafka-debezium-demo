@@ -1,8 +1,9 @@
+use crate::proto::ProtoConvert;
 use proto_convert::ProtoConvert;
-
 mod proto;
 
 #[derive(Debug, ProtoConvert)]
+#[proto_convert(source = "proto::Entity")]
 struct Entity {
     pub id: u32,
     pub nonce: i32,
