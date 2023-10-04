@@ -5,6 +5,7 @@ members = [
     "claims-core",
     "claims-schema",
     "claims-model",
+    "proto-convert",
     "app-claims-service",
     "app-claims-version-service"
 ]
@@ -13,5 +14,6 @@ default-members = [
     "claims-core",
     "claims-model",
     "claims-schema",
+    "proto-convert",
     "app-*"
 ]
