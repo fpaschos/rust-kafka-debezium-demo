@@ -3,7 +3,6 @@ use darling::{FromDeriveInput, FromMeta};
 use proc_macro::TokenStream;
 use proc_macro2::{Ident, Span};
 use quote::{quote, ToTokens};
-use syn::ReturnType::Default;
 use syn::{Attribute, Data, DataStruct, DeriveInput, Path};
 
 pub(crate) fn implement_proto_convert(input: TokenStream) -> TokenStream {
@@ -62,7 +61,7 @@ impl darling::FromDeriveInput for ProtoConvert {
             )?)),
             // Data::Enum(data) => {},
             _ => Err(darling::Error::unsupported_shape(
-                "Supports only  Struct items",
+                "Macro supports only `struct` items",
             )),
         }
     }
@@ -82,7 +81,14 @@ impl ProtoConvertStruct {
         data: &DataStruct,
     ) -> darling::Result<Self> {
         let fields = Self::get_fields_with_attrs(data)?;
-        let attrs = attrs.into();
+
+        let attrs = ProtoConvertStructAttrs::try_from(attrs)?;
+
+        if attrs.source.is_none() {
+            return Err(darling::Error::unsupported_shape(
+                "Missing `source` meta field",
+            ));
+        }
         Ok(Self {
             name,
             attrs,
@@ -100,7 +106,7 @@ impl ProtoConvertStruct {
                     darling::Error::unsupported_shape("Struct fields must have identifiers.")
                 })?;
 
-                let attrs = ProtoConvertFieldAttrs::from(f.attrs.as_ref());
+                let attrs = ProtoConvertFieldAttrs::try_from(f.attrs.as_ref())?;
                 Ok((ident, attrs))
             })
             .collect()
@@ -113,20 +119,39 @@ impl ToTokens for ProtoConvertStruct {
         let source = self.attrs.source.as_ref();
 
         let from_proto_impl = {
-            quote! {}
+            let fields = self
+                .fields
+                .iter()
+                .map(|(ident, attrs)| attrs.impl_field_setter(ident));
+
+            quote! {
+                let inner = Self {
+                    #(#fields)*
+                };
+                Ok(inner)
+            }
         };
 
-        // let to_proto_impl = {
-        //     quote! {}
+        // let to_pb_impl = {
+        //     let fields = self
+        //         .fields
+        //         .iter()
+        //         .map(|(ident, attrs)| attrs.impl_field_getter(ident));
+        //
+        //     quote! {
+        //         let mut msg = Self::ProtoStruct::default();
+        //         #(#fields)*
+        //         msg
+        //     }
         // };
 
         let expanded = quote! {
             impl ProtoConvert for #name {
-                type ProtoStruct = ();
+                type ProtoStruct = #source;
 
-                // fn from_proto(p: Self::ProtoStruct) -> std::result::Result<Self, anyhow::Error> {
-                //     #from_proto_impl
-                // }
+                fn from_proto(proto: Self::ProtoStruct) -> std::result::Result<Self, anyhow::Error> {
+                    #from_proto_impl
+                }
 
                 // fn to_proto(&self) -> Self::ProtoStruct {
                 //     #to_proto_impl
@@ -143,12 +168,24 @@ struct ProtoConvertStructAttrs {
     source: Option<Path>,
 }
 
-impl From<&[Attribute]> for ProtoConvertStructAttrs {
-    fn from(attrs: &[Attribute]) -> Self {
-        let metas = find_proto_convert_meta(attrs);
-        Self::from_list(&metas).unwrap_or_default()
+impl TryFrom<&[Attribute]> for ProtoConvertStructAttrs {
+    type Error = darling::Error;
+
+    fn try_from(attrs: &[Attribute]) -> Result<Self, Self::Error> {
+        let meta = find_proto_convert_meta(attrs).ok_or_else(|| {
+            darling::Error::unsupported_shape("Missing meta attribute `proto_convert`")
+        })?;
+        Ok(Self::from_meta(meta)?)
     }
 }
+
+// impl From<&[Attribute]> for ProtoConvertStructAttrs {
+//     fn from(attrs: &[Attribute]) -> Self {
+//         let meta = find_proto_convert_meta(attrs).unwrap_or_default();
+//
+//         Self::from_meta(&meta).unwrap_or_default()
+//     }
+// }
 
 #[derive(Debug, FromMeta, Default)]
 #[darling(default)]
@@ -167,7 +204,7 @@ impl ProtoConvertFieldAttrs {
             quote! { Default::default() }
         } else {
             // Usual setter.
-            quote! { ProtoConvert::from_proto(pb.#proto_getter().to_owned())? }
+            quote! { ProtoConvert::from_proto(proto.#proto_getter().to_owned())? }
         };
 
         // let setter = match (self.skip, &self.with) {
@@ -201,9 +238,19 @@ impl ProtoConvertFieldAttrs {
     // }
 }
 
-impl From<&[Attribute]> for ProtoConvertFieldAttrs {
-    fn from(attrs: &[Attribute]) -> Self {
-        let metas = find_proto_convert_meta(attrs);
-        Self::from_list(&metas).unwrap_or_default()
+impl TryFrom<&[Attribute]> for ProtoConvertFieldAttrs {
+    type Error = darling::Error;
+
+    fn try_from(attrs: &[Attribute]) -> Result<Self, Self::Error> {
+        find_proto_convert_meta(attrs)
+            .map(|meta| Self::from_meta(meta))
+            .unwrap_or_else(|| Ok(Self::default()))
     }
 }
+
+// impl From<&[Attribute]> for ProtoConvertFieldAttrs {
+//     fn from(attrs: &[Attribute]) -> Self {
+//         let metas = find_proto_convert_meta(attrs);
+//         Self::from_list(&metas).unwrap_or_default()
+//     }
+// }
