@@ -8,8 +8,8 @@ pub trait ProtoConvert: Sized {
     /// Type of the protobuf clone of Self
     type ProtoStruct;
 
-    /// Struct -> ProtoStruct
-    // fn to_proto(&self) -> Self::ProtoStruct;
+    /// Converts a reference of [`Self`] struct to proto [`Self::ProtoStruct`]
+    fn to_proto(&self) -> Self::ProtoStruct;
 
     /// Consumes a proto [`Self::ProtoStruct`] and returns a [`Self`] struct
     fn from_proto(proto: Self::ProtoStruct) -> Result<Self, anyhow::Error>;
@@ -18,9 +18,9 @@ pub trait ProtoConvert: Sized {
 impl ProtoConvert for u32 {
     type ProtoStruct = Self;
 
-    // fn to_proto(&self) -> Self::ProtoStruct {
-    //     *self
-    // }
+    fn to_proto(&self) -> Self::ProtoStruct {
+        *self
+    }
 
     fn from_proto(proto: Self::ProtoStruct) -> Result<Self, anyhow::Error> {
         Ok(proto)
@@ -30,9 +30,9 @@ impl ProtoConvert for u32 {
 impl ProtoConvert for i32 {
     type ProtoStruct = Self;
 
-    // fn to_proto(&self) -> Self::ProtoStruct {
-    //     *self
-    // }
+    fn to_proto(&self) -> Self::ProtoStruct {
+        *self
+    }
 
     fn from_proto(proto: Self::ProtoStruct) -> Result<Self, anyhow::Error> {
         Ok(proto)
@@ -42,9 +42,9 @@ impl ProtoConvert for i32 {
 impl ProtoConvert for bool {
     type ProtoStruct = Self;
 
-    // fn to_proto(&self) -> Self::ProtoStruct {
-    //     *self
-    // }
+    fn to_proto(&self) -> Self::ProtoStruct {
+        *self
+    }
 
     fn from_proto(proto: Self::ProtoStruct) -> Result<Self, anyhow::Error> {
         Ok(proto)
@@ -54,9 +54,9 @@ impl ProtoConvert for bool {
 impl ProtoConvert for String {
     type ProtoStruct = Self;
 
-    // fn to_proto(&self) -> Self::ProtoStruct {
-    //     *self
-    // }
+    fn to_proto(&self) -> Self::ProtoStruct {
+        self.clone()
+    }
 
     fn from_proto(proto: Self::ProtoStruct) -> Result<Self, anyhow::Error> {
         Ok(proto)

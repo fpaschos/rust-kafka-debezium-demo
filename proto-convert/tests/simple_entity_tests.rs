@@ -14,14 +14,21 @@ struct Entity {
 
 #[test]
 fn entity_round_trip() {
-    let expected = Entity {
+    let original = Entity {
         id: 1,
         nonce: 10,
         valid: true,
         name: "Foo".into(),
     };
 
-    let proto = proto::Entity {
+    let p = original.to_proto();
+    let tested = Entity::from_proto(p).unwrap();
+
+    assert_eq!(tested, original);
+}
+
+fn proto_entity_round_trip() {
+    let original = proto::Entity {
         id: 1,
         nonce: 10,
         name: "Foo".to_string(),
@@ -29,6 +36,8 @@ fn entity_round_trip() {
         ..Default::default()
     };
 
-    let e = Entity::from_proto(proto).unwrap();
-    assert_eq!(e, expected);
+    let e = Entity::from_proto(original.clone()).unwrap();
+    let tested = e.to_proto();
+
+    assert_eq!(tested, original);
 }

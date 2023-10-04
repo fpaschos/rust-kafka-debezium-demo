@@ -1,9 +1,7 @@
 mod impl_proto_convert;
 
-use darling::ast::NestedMeta;
 use proc_macro::TokenStream;
-use quote::ToTokens;
-use syn::{parse::Parse, Attribute, Meta};
+use syn::{Attribute, Meta};
 
 const CONVERT_ATTRIBUTE: &str = "proto_convert";
 

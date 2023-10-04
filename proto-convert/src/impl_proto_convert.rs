@@ -132,18 +132,18 @@ impl ToTokens for ProtoConvertStruct {
             }
         };
 
-        // let to_pb_impl = {
-        //     let fields = self
-        //         .fields
-        //         .iter()
-        //         .map(|(ident, attrs)| attrs.impl_field_getter(ident));
-        //
-        //     quote! {
-        //         let mut msg = Self::ProtoStruct::default();
-        //         #(#fields)*
-        //         msg
-        //     }
-        // };
+        let to_proto_impl = {
+            let fields = self
+                .fields
+                .iter()
+                .map(|(ident, attrs)| attrs.impl_field_getter(ident));
+
+            quote! {
+                let mut msg = Self::ProtoStruct::default();
+                #(#fields)*
+                msg
+            }
+        };
 
         let expanded = quote! {
             impl ProtoConvert for #name {
@@ -153,9 +153,9 @@ impl ToTokens for ProtoConvertStruct {
                     #from_proto_impl
                 }
 
-                // fn to_proto(&self) -> Self::ProtoStruct {
-                //     #to_proto_impl
-                // }
+                fn to_proto(&self) -> Self::ProtoStruct {
+                    #to_proto_impl
+                }
             }
         };
         tokens.extend(expanded);
@@ -175,7 +175,7 @@ impl TryFrom<&[Attribute]> for ProtoConvertStructAttrs {
         let meta = find_proto_convert_meta(attrs).ok_or_else(|| {
             darling::Error::unsupported_shape("Missing meta attribute `proto_convert`")
         })?;
-        Ok(Self::from_meta(meta)?)
+        Self::from_meta(meta)
     }
 }
 
@@ -197,7 +197,7 @@ struct ProtoConvertFieldAttrs {
 impl ProtoConvertFieldAttrs {
     // TODO support skip
     fn impl_field_setter(&self, ident: &Ident) -> impl ToTokens {
-        let proto_getter = Ident::new(&format!("{}", ident), Span::call_site());
+        let proto_getter = Ident::new(&ident.to_string(), Span::call_site());
 
         let setter = if self.skip {
             // Default setter for the skipped fields.
@@ -219,23 +219,31 @@ impl ProtoConvertFieldAttrs {
         quote! { #ident: #setter, }
     }
 
-    // TODO
-    // fn impl_field_getter(&self, ident: &Ident) -> impl ToTokens {
-    //     let pb_setter = Ident::new(&format!("set_{}", ident), Span::call_site());
-    //
-    //     match (self.skip, &self.with) {
-    //         // Usual getter.
-    //         (false, None) => quote! {
-    //             msg.#pb_setter(ProtobufConvert::to_pb(&self.#ident).into());
-    //         },
-    //         // Getter with the overridden Protobuf conversion.
-    //         (false, Some(with)) => quote! {
-    //             msg.#pb_setter(#with::to_pb(&self.#ident).into());
-    //         },
-    //         // Skipped getter does nothing.
-    //         (true, _) => quote! {},
-    //     }
-    // }
+    fn impl_field_getter(&self, ident: &Ident) -> impl ToTokens {
+        let proto_setter = Ident::new(&format!("set_{}", ident), Span::call_site());
+        if self.skip {
+            // Skipped getter does nothing.
+            quote! {}
+        } else {
+            // Usual getter.
+            quote! {
+                msg.#proto_setter(ProtoConvert::to_proto(&self.#ident).into());
+            }
+        }
+
+        // match (self.skip, &self.with) {
+        //     // Usual getter.
+        //     (false, None) => quote! {
+        //         msg.#pb_setter(ProtobufConvert::to_pb(&self.#ident).into());
+        //     },
+        //     // Getter with the overridden Protobuf conversion.
+        //     (false, Some(with)) => quote! {
+        //         msg.#pb_setter(#with::to_pb(&self.#ident).into());
+        //     },
+        //     // Skipped getter does nothing.
+        //     (true, _) => quote! {},
+        // }
+    }
 }
 
 impl TryFrom<&[Attribute]> for ProtoConvertFieldAttrs {
@@ -243,7 +251,7 @@ impl TryFrom<&[Attribute]> for ProtoConvertFieldAttrs {
 
     fn try_from(attrs: &[Attribute]) -> Result<Self, Self::Error> {
         find_proto_convert_meta(attrs)
-            .map(|meta| Self::from_meta(meta))
+            .map(Self::from_meta)
             .unwrap_or_else(|| Ok(Self::default()))
     }
 }
