@@ -1,4 +1,4 @@
-### Proto convert macro
+### Proto convert
 
 ### Reference Projects
 - [Github: protobuf-convert](https://github.com/aleksuss/protobuf-convert/blob/master/README.md)

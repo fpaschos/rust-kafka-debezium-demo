@@ -1,5 +1,5 @@
-use proto::ProtoConvert;
-use proto_convert_derive::ProtoConvert;
+use proto_convert::derive::ProtoConvert;
+use proto_convert::ProtoConvert;
 
 mod proto;
 

@@ -5,16 +5,14 @@ edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
-[lib]
-proc-macro = true
 
 [dependencies]
 proto-convert-derive = { path = "../proto-convert-derive" }
-
+anyhow = "1.0.75"
 
 [dev-dependencies]
 protobuf = "3.3.0"
-anyhow = "1.0.75"
+
 
 [build-dependencies]
 protobuf-codegen = "3.3.0"
