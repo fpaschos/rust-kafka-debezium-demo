@@ -9,11 +9,8 @@ edition = "2021"
 proc-macro = true
 
 [dependencies]
+proto-convert-derive = { path = "../proto-convert-derive" }
 
-darling = "0.20.3"
-proc-macro2 = "1.0.67"
-quote = "1.0.33"
-syn = "2.0.37"
 
 [dev-dependencies]
 protobuf = "3.3.0"

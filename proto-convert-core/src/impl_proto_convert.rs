@@ -1,12 +1,11 @@
 use crate::find_proto_convert_meta;
 use darling::{FromDeriveInput, FromMeta};
-use proc_macro::TokenStream;
-use proc_macro2::{Ident, Span};
+use proc_macro2::{Ident, Span, TokenStream};
 use quote::{quote, ToTokens};
 use syn::{Attribute, Data, DataStruct, DeriveInput, Path};
 
-pub(crate) fn implement_proto_convert(input: TokenStream) -> TokenStream {
-    let input = ProtoConvert::from_derive_input(&syn::parse(input).unwrap())
+pub fn implement_proto_convert(input: TokenStream) -> TokenStream {
+    let input = ProtoConvert::from_derive_input(&syn::parse(input.into()).unwrap())
         .unwrap_or_else(|e| panic!("ProtoConvert: {}", e));
     let tokens = quote! { #input };
     tokens.into()
