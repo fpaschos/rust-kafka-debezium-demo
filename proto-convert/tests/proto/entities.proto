@@ -28,3 +28,9 @@ enum EntityType {
   TYPE_B = 1;
   TYPE_C = 2;
 }
+
+
+message NestedEntity {
+  string token = 1;
+  Entity inner = 2;
+}

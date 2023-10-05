@@ -1,4 +1,5 @@
 pub use entities::*;
+use proto_convert::ProtoConvert;
 
 pub mod entities {
     include!(concat!(env!("OUT_DIR"), "/mod.rs"));
@@ -61,4 +62,10 @@ impl ProtoConvert for String {
     fn from_proto(proto: Self::ProtoStruct) -> Result<Self, anyhow::Error> {
         Ok(proto)
     }
+}
+
+#[derive(Debug, ProtoConvert, Eq, PartialEq)]
+#[proto_convert(source = "entities::Entity")]
+pub struct EntityCommon {
+    pub id: u32,
 }

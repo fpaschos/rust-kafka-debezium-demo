@@ -179,14 +179,6 @@ impl TryFrom<&[Attribute]> for ProtoConvertStructAttrs {
     }
 }
 
-// impl From<&[Attribute]> for ProtoConvertStructAttrs {
-//     fn from(attrs: &[Attribute]) -> Self {
-//         let meta = find_proto_convert_meta(attrs).unwrap_or_default();
-//
-//         Self::from_meta(&meta).unwrap_or_default()
-//     }
-// }
-
 #[derive(Debug, FromMeta, Default)]
 #[darling(default)]
 struct ProtoConvertFieldAttrs {
@@ -255,10 +247,3 @@ impl TryFrom<&[Attribute]> for ProtoConvertFieldAttrs {
             .unwrap_or_else(|| Ok(Self::default()))
     }
 }
-
-// impl From<&[Attribute]> for ProtoConvertFieldAttrs {
-//     fn from(attrs: &[Attribute]) -> Self {
-//         let metas = find_proto_convert_meta(attrs);
-//         Self::from_list(&metas).unwrap_or_default()
-//     }
-// }

@@ -1,4 +1,4 @@
-use crate::proto::ProtoConvert;
+use crate::proto::{EntityCommon, ProtoConvert};
 use proto_convert::ProtoConvert;
 use std::default::Default;
 mod proto;
@@ -27,6 +27,7 @@ fn entity_round_trip() {
     assert_eq!(tested, original);
 }
 
+#[test]
 fn proto_entity_round_trip() {
     let original = proto::Entity {
         id: 1,
@@ -40,4 +41,12 @@ fn proto_entity_round_trip() {
     let tested = e.to_proto();
 
     assert_eq!(tested, original);
+}
+
+#[test]
+fn test_use_from_module() {
+    // Just use the entity from another module
+    let e = EntityCommon { id: 10 };
+    let p = e.to_proto();
+    let _ = EntityCommon::from_proto(p).unwrap();
 }
