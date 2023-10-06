@@ -1,6 +1,7 @@
-use crate::find_proto_convert_meta;
+use crate::{find_proto_convert_meta, SNAKE_CASE_ATTRIBUTE_VALUE};
 use darling::FromMeta;
-use proc_macro2::{Ident, TokenStream};
+use heck::ToSnakeCase;
+use proc_macro2::{Ident, Span, TokenStream};
 use quote::{quote, ToTokens};
 use syn::{Attribute, DataEnum, Fields, Path, Type, Variant};
 
@@ -30,27 +31,72 @@ impl ProtoConvertEnum {
             variants,
         })
     }
-}
 
-impl ToTokens for ProtoConvertEnum {
-    fn to_tokens(&self, tokens: &mut TokenStream) {
+    fn impl_proto_convert(&self) -> impl ToTokens {
         let name = &self.name;
         let proto_struct = &self.attrs.source;
+        let one_of_field = &self.attrs.oneof_field;
 
-        let expanded = quote! {
+        let from_proto_impl = quote! {};
+
+        let to_proto_impl = {
+            let match_arms = self.variants.iter().map(|variant| {
+                let variant_name = &variant.name;
+                let proto_variant_name = self.get_proto_variant_name(variant);
+
+                let setter = Ident::new(&format!("set_{}", proto_variant_name), Span::call_site());
+                quote! {
+                     #name::#variant_name(value) => inner.#setter(value.to_proto()),
+                }
+            });
+
+            quote! {
+                let mut inner = Self::ProtoStruct::new();
+                match self {
+                    #( #match_arms )*
+                }
+                inner
+            }
+        };
+
+        quote! {
             impl ProtoConvert for #name {
                 type ProtoStruct = #proto_struct;
 
                  fn from_proto(proto: Self::ProtoStruct) -> std::result::Result<Self, anyhow::Error> {
-                    // #from_proto_impl
-                    todo!();
+                    #from_proto_impl
+                    todo!("ProtoConvert `from_proto(...)` not yet implemented for Enum items");
                 }
 
                 fn to_proto(&self) -> Self::ProtoStruct {
-                    // #to_proto_impl
-                    todo!();
+                    #to_proto_impl
                 }
             }
+        }
+    }
+
+    fn get_proto_variant_name(&self, variant: &EnumVariant) -> String {
+        if let Some(rename_attr) = self.attrs.rename_variants.as_ref() {
+            if rename_attr == SNAKE_CASE_ATTRIBUTE_VALUE {
+                return variant.name.to_string().to_snake_case();
+            } else {
+                panic!(
+                    "{}",
+                    format!("Unknown attribute `rename_variants` = `{}`", rename_attr)
+                );
+            }
+        }
+
+        variant.name.to_string()
+    }
+}
+
+impl ToTokens for ProtoConvertEnum {
+    fn to_tokens(&self, tokens: &mut TokenStream) {
+        let proto_convert = self.impl_proto_convert();
+
+        let expanded = quote! {
+            #proto_convert
         };
         tokens.extend(expanded)
     }
@@ -60,6 +106,7 @@ impl ToTokens for ProtoConvertEnum {
 pub(crate) struct ProtoConvertEnumAttrs {
     source: Path,
     oneof_field: Ident,
+    rename_variants: Option<String>,
 }
 
 impl TryFrom<&[Attribute]> for ProtoConvertEnumAttrs {

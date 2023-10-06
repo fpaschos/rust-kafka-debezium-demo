@@ -5,6 +5,7 @@ mod proto_convert_enum;
 mod proto_convert_struct;
 
 const CONVERT_ATTRIBUTE: &str = "proto_convert";
+const SNAKE_CASE_ATTRIBUTE_VALUE: &str = "snake_case";
 
 pub(crate) fn find_proto_convert_meta(attrs: &[Attribute]) -> Option<&Meta> {
     attrs
