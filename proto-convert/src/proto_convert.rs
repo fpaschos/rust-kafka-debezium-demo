@@ -61,11 +61,10 @@ impl<T: ProtoConvert + Default + Clone + PartialEq> ProtoConvert for Option<T> {
     type ProtoStruct = T;
 
     fn to_proto(&self) -> Self::ProtoStruct {
-        let v = match self {
+        match self {
             None => Default::default(),
             Some(value) => value.clone(),
-        };
-        v
+        }
     }
 
     fn from_proto(proto: Self::ProtoStruct) -> Result<Self, anyhow::Error> {

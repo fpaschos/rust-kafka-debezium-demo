@@ -1,4 +1,5 @@
 use proto_convert::{derive::ProtoConvert, ProtoConvert};
+use protobuf::Message;
 mod proto;
 #[derive(Debug, ProtoConvert, Eq, PartialEq, Default)]
 #[proto_convert(source = "proto::Entity")]
@@ -37,7 +38,7 @@ fn filled_entity_round_trip() {
         id: Some(100),
         nonce: Some(1000),
         valid: Some(true),
-        name: Some("Fooo".into()),
+        name: Some("Foo".into()),
     };
 
     let p = original.to_proto();

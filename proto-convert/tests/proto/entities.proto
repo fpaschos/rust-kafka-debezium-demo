@@ -34,3 +34,17 @@ message NestedEntity {
   string token = 1;
   Entity inner = 2;
 }
+
+message HierarchyEntity {
+  oneof data {
+    Entity first_entity = 1;
+    NestedEntity second_entity = 2;
+  }
+}
+
+message HierarchyEntitySameTypes {
+  oneof data {
+    Entity first_entity = 1;
+    Entity second_entity = 2;
+  }
+}
