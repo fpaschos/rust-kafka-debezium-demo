@@ -15,7 +15,7 @@ anyhow = "1.0.75"
 [dev-dependencies]
 protobuf = "3.3.0"
 chrono = "0.4.31"
-uuid = "1.4.1"
+uuid = { version = "1.4.1", features = ["v4"] }
 
 [build-dependencies]
 protobuf-codegen = "3.3.0"

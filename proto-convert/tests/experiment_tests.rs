@@ -1,6 +1,7 @@
 use anyhow::Error;
+use std::str::FromStr;
 use uuid::Uuid;
-
+/// Fully expanded and manual experiments (these used to build the macros and the library traits synergy)
 mod proto;
 
 pub trait ProtoConvert<Proto>
@@ -94,15 +95,25 @@ impl ProtoConvertPrimitive<String> for String {
 
 impl ProtoConvertPrimitive<String> for Uuid {
     fn to_proto(&self) -> String {
-        todo!()
+        self.to_string()
     }
 
     fn from_proto(proto: String) -> Result<Self, Error> {
-        todo!()
+        Ok(Uuid::from_str(&proto)?)
     }
 }
 
-#[derive(Debug, Eq, PartialEq)]
+// impl ProtoConvertPrimitive<Vec> for Uuid {
+//     fn to_proto(&self) -> String {
+//         self.to_string()
+//     }
+//
+//     fn from_proto(proto: String) -> Result<Self, Error> {
+//         Ok(Uuid::from_str(&proto)?)
+//     }
+// }
+
+#[derive(Debug, PartialEq)]
 struct Entity {
     pub id: u32,
     pub nonce: i32,
@@ -111,6 +122,14 @@ struct Entity {
 }
 
 impl ProtoConvert<proto::Entity> for Entity {
+    fn to_proto(&self) -> proto::Entity {
+        let mut msg = proto::Entity::default();
+        msg.set_id(ProtoConvertPrimitive::to_proto(&self.id).into());
+        msg.set_nonce(ProtoConvertPrimitive::to_proto(&self.nonce).into());
+        msg.set_valid(ProtoConvertPrimitive::to_proto(&self.valid).into());
+        msg.set_name(ProtoConvertPrimitive::to_proto(&self.name).into());
+        msg
+    }
     fn from_proto(proto: proto::Entity) -> Result<Self, anyhow::Error> {
         let inner = Self {
             id: ProtoConvertPrimitive::from_proto(proto.id().to_owned())?,
@@ -120,17 +139,9 @@ impl ProtoConvert<proto::Entity> for Entity {
         };
         Ok(inner)
     }
-    fn to_proto(&self) -> proto::Entity {
-        let mut msg = proto::Entity::default();
-        msg.set_id(ProtoConvertPrimitive::to_proto(&self.id).into());
-        msg.set_nonce(ProtoConvertPrimitive::to_proto(&self.nonce).into());
-        msg.set_valid(ProtoConvertPrimitive::to_proto(&self.valid).into());
-        msg.set_name(ProtoConvertPrimitive::to_proto(&self.name).into());
-        msg
-    }
 }
 
-#[derive(Debug, Eq, PartialEq)]
+#[derive(Debug, PartialEq)]
 struct EntityWithOptionals {
     pub id: u32,
     pub nonce: i32,
@@ -143,6 +154,31 @@ struct EntityWithOptionals {
 }
 
 impl ProtoConvert<proto::EntityWithOptionals> for EntityWithOptionals {
+    fn to_proto(&self) -> proto::EntityWithOptionals {
+        let mut msg = proto::EntityWithOptionals::default();
+        msg.set_id(ProtoConvertPrimitive::to_proto(&self.id).into());
+        msg.set_nonce(ProtoConvertPrimitive::to_proto(&self.nonce).into());
+        msg.set_valid(ProtoConvertPrimitive::to_proto(&self.valid).into());
+        msg.set_name(ProtoConvertPrimitive::to_proto(&self.name).into());
+
+        // Only if there is value other default
+        if let Some(value) = &self.opt_id {
+            msg.set_opt_id(ProtoConvertPrimitive::to_proto(value).into());
+        }
+
+        // Only if there is value other default
+        if let Some(value) = &self.opt_nonce {
+            msg.set_opt_nonce(ProtoConvertPrimitive::to_proto(value).into());
+        }
+        if let Some(value) = &self.opt_valid {
+            msg.set_opt_valid(ProtoConvertPrimitive::to_proto(value).into());
+        }
+
+        if let Some(value) = &self.opt_name {
+            msg.set_opt_name(ProtoConvertPrimitive::to_proto(value).into());
+        }
+        msg
+    }
     fn from_proto(proto: proto::EntityWithOptionals) -> Result<Self, anyhow::Error> {
         let inner = Self {
             id: ProtoConvertPrimitive::from_proto(proto.id().to_owned())?,
@@ -185,31 +221,46 @@ impl ProtoConvert<proto::EntityWithOptionals> for EntityWithOptionals {
         };
         Ok(inner)
     }
-    fn to_proto(&self) -> proto::EntityWithOptionals {
-        let mut msg = proto::EntityWithOptionals::default();
-        msg.set_id(ProtoConvertPrimitive::to_proto(&self.id).into());
-        msg.set_nonce(ProtoConvertPrimitive::to_proto(&self.nonce).into());
-        msg.set_valid(ProtoConvertPrimitive::to_proto(&self.valid).into());
-        msg.set_name(ProtoConvertPrimitive::to_proto(&self.name).into());
+}
 
-        msg.set_opt_id(
-            ProtoConvertPrimitive::to_proto(&self.opt_id.clone().unwrap_or_default()).into(),
-        );
-        msg.set_opt_nonce(
-            ProtoConvertPrimitive::to_proto(&self.opt_nonce.clone().unwrap_or_default()).into(),
-        );
-        msg.set_opt_valid(
-            ProtoConvertPrimitive::to_proto(&self.opt_valid.clone().unwrap_or_default()).into(),
-        );
-        msg.set_opt_name(
-            ProtoConvertPrimitive::to_proto(&self.opt_name.clone().unwrap_or_default()).into(),
-        );
+#[derive(Debug, PartialEq)]
+pub struct EntityUuids {
+    uuid_str: Uuid,
+    opt_uuid_str: Option<Uuid>,
+    // uuid_3: Uuid,
+    // uuid_4: Option<Uuid>,
+}
+
+impl ProtoConvert<proto::EntityUuids> for EntityUuids {
+    fn to_proto(&self) -> proto::EntityUuids {
+        let mut msg = proto::EntityUuids::default();
+        msg.set_uuid_str(ProtoConvertPrimitive::to_proto(&self.uuid_str).into());
+
+        // Only if there is value other default
+        if let Some(value) = &self.opt_uuid_str {
+            msg.set_opt_uuid_str(ProtoConvertPrimitive::to_proto(value).into());
+        }
+
         msg
+    }
+    fn from_proto(proto: proto::EntityUuids) -> Result<Self, anyhow::Error> {
+        let inner = Self {
+            uuid_str: ProtoConvertPrimitive::from_proto(proto.uuid_str().to_owned())?,
+            opt_uuid_str: {
+                let v = proto.opt_uuid_str().to_owned();
+                if ProtoPrimitiveValue::has_value(&v) {
+                    Some(ProtoConvertPrimitive::from_proto(v)?)
+                } else {
+                    None
+                }
+            },
+        };
+        Ok(inner)
     }
 }
 
 #[test]
-fn test_roundtrip() {
+fn entity_test_roundtrip() {
     let original = Entity {
         id: 1,
         nonce: 10,
@@ -239,5 +290,28 @@ fn test_entity_with_optionals_roundtrip() {
     let p = original.to_proto();
     let tested = EntityWithOptionals::from_proto(p).unwrap();
 
+    assert_eq!(tested, original);
+}
+
+#[test]
+fn test_entity_uuids_roundtrips() {
+    // Test with value
+    let original = EntityUuids {
+        uuid_str: Uuid::new_v4(),
+        opt_uuid_str: Some(Uuid::new_v4()),
+    };
+
+    let p = original.to_proto();
+    let tested = EntityUuids::from_proto(p).unwrap();
+    assert_eq!(tested, original);
+
+    // Test with none
+    let original = EntityUuids {
+        uuid_str: Uuid::new_v4(),
+        opt_uuid_str: None,
+    };
+
+    let p = original.to_proto();
+    let tested = EntityUuids::from_proto(p).unwrap();
     assert_eq!(tested, original);
 }

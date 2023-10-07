@@ -41,6 +41,13 @@ enum EntityType {
 }
 
 
+message EntityUuids {
+  string uuid_str = 1;
+  string opt_uuid_str = 2;
+  bytes uuid_bytes = 3;
+  bytes opt_uuid_bytes  = 4;
+}
+
 message NestedEntity {
   Entity first = 1;
   Entity second = 2;
@@ -59,3 +66,4 @@ message HierarchyEntitySameTypes {
     Entity second_entity = 2;
   }
 }
+
