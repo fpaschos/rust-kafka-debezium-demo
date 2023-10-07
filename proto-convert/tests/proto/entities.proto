@@ -15,6 +15,17 @@ message Entity {
   EntityType type = 7;
 }
 
+message EntityWithOptionals {
+  uint32 id = 1;
+  int32 nonce = 2;
+  bool valid = 4;
+  string name = 5;
+  uint32 opt_id = 6;
+  int32 opt_nonce = 7;
+  bool opt_valid = 8;
+  string opt_name = 9;
+}
+
 // Enum for ClaimStatus
 enum EntityStatus {
   STATUS_A = 0;

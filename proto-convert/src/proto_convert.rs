@@ -57,6 +57,7 @@ impl ProtoConvert for String {
     }
 }
 
+// TODO remove
 impl<T: ProtoConvert + Default + Clone + PartialEq> ProtoConvert for Option<T> {
     type ProtoStruct = T;
 
@@ -69,6 +70,7 @@ impl<T: ProtoConvert + Default + Clone + PartialEq> ProtoConvert for Option<T> {
 
     fn from_proto(proto: Self::ProtoStruct) -> Result<Self, anyhow::Error> {
         if proto == Self::ProtoStruct::default() {
+            // TODO Remove because of this expensive use of default()
             Ok(None)
         } else {
             Ok(Some(proto))
