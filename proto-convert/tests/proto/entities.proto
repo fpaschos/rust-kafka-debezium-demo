@@ -42,8 +42,8 @@ enum EntityType {
 
 
 message NestedEntity {
-  string token = 1;
-  Entity inner = 2;
+  Entity first = 1;
+  Entity second = 2;
 }
 
 message HierarchyEntity {

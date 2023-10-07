@@ -17,14 +17,39 @@ where
 }
 
 ///TODO see https://rust-lang.github.io/api-guidelines/future-proofing.html#c-sealed for sealed trait
+pub trait ProtoPrimitiveValue: Sized {
+    fn has_value(&self) -> bool;
+}
+impl ProtoPrimitiveValue for u32 {
+    fn has_value(&self) -> bool {
+        *self != 0
+    }
+}
+
+impl ProtoPrimitiveValue for i32 {
+    fn has_value(&self) -> bool {
+        *self != 0
+    }
+}
+
+impl ProtoPrimitiveValue for String {
+    fn has_value(&self) -> bool {
+        !self.is_empty()
+    }
+}
+
+impl ProtoPrimitiveValue for bool {
+    fn has_value(&self) -> bool {
+        *self
+    }
+}
+///TODO see https://rust-lang.github.io/api-guidelines/future-proofing.html#c-sealed for sealed trait
 pub trait ProtoConvertPrimitive<ProtoRepr>: Sized {
     /// Converts a reference of [`Self`] struct to proto [`Self::Proto`]
     fn to_proto(&self) -> ProtoRepr;
 
     /// Consumes a proto [`Self::Proto`] and returns a [`Self`] struct
     fn from_proto(proto: ProtoRepr) -> Result<Self, anyhow::Error>;
-
-    fn has_value(proto: &ProtoRepr) -> bool;
 }
 
 impl ProtoConvertPrimitive<u32> for u32 {
@@ -34,10 +59,6 @@ impl ProtoConvertPrimitive<u32> for u32 {
 
     fn from_proto(proto: Self) -> Result<Self, anyhow::Error> {
         Ok(proto)
-    }
-
-    fn has_value(proto: &u32) -> bool {
-        *proto != 0
     }
 }
 
@@ -49,10 +70,6 @@ impl ProtoConvertPrimitive<i32> for i32 {
     fn from_proto(proto: Self) -> Result<Self, anyhow::Error> {
         Ok(proto)
     }
-
-    fn has_value(proto: &i32) -> bool {
-        *proto != 0
-    }
 }
 
 impl ProtoConvertPrimitive<bool> for bool {
@@ -62,10 +79,6 @@ impl ProtoConvertPrimitive<bool> for bool {
 
     fn from_proto(proto: Self) -> Result<Self, anyhow::Error> {
         Ok(proto)
-    }
-
-    fn has_value(proto: &bool) -> bool {
-        !*proto
     }
 }
 
@@ -77,10 +90,6 @@ impl ProtoConvertPrimitive<String> for String {
     fn from_proto(proto: Self) -> Result<Self, anyhow::Error> {
         Ok(proto)
     }
-
-    fn has_value(proto: &String) -> bool {
-        !proto.is_empty()
-    }
 }
 
 impl ProtoConvertPrimitive<String> for Uuid {
@@ -90,10 +99,6 @@ impl ProtoConvertPrimitive<String> for Uuid {
 
     fn from_proto(proto: String) -> Result<Self, Error> {
         todo!()
-    }
-
-    fn has_value(proto: &String) -> bool {
-        !proto.is_empty()
     }
 }
 
@@ -147,7 +152,7 @@ impl ProtoConvert<proto::EntityWithOptionals> for EntityWithOptionals {
             // Special case for options
             opt_id: {
                 let v = proto.opt_id().to_owned();
-                if <u32 as ProtoConvertPrimitive<u32>>::has_value(&v) {
+                if ProtoPrimitiveValue::has_value(&v) {
                     Some(ProtoConvertPrimitive::from_proto(v)?)
                 } else {
                     None
@@ -155,7 +160,7 @@ impl ProtoConvert<proto::EntityWithOptionals> for EntityWithOptionals {
             },
             opt_nonce: {
                 let v = proto.opt_nonce().to_owned();
-                if <i32 as ProtoConvertPrimitive<i32>>::has_value(&v) {
+                if ProtoPrimitiveValue::has_value(&v) {
                     Some(ProtoConvertPrimitive::from_proto(v)?)
                 } else {
                     None
@@ -163,7 +168,7 @@ impl ProtoConvert<proto::EntityWithOptionals> for EntityWithOptionals {
             },
             opt_valid: {
                 let v = proto.opt_valid().to_owned();
-                if <bool as ProtoConvertPrimitive<bool>>::has_value(&v) {
+                if ProtoPrimitiveValue::has_value(&v) {
                     Some(ProtoConvertPrimitive::from_proto(v)?)
                 } else {
                     None
@@ -171,7 +176,7 @@ impl ProtoConvert<proto::EntityWithOptionals> for EntityWithOptionals {
             },
             opt_name: {
                 let v = proto.opt_name().to_owned();
-                if <String as ProtoConvertPrimitive<String>>::has_value(&v) {
+                if ProtoPrimitiveValue::has_value(&v) {
                     Some(ProtoConvertPrimitive::from_proto(v)?)
                 } else {
                     None

@@ -3,7 +3,7 @@ use proto_convert::ProtoConvert;
 
 mod proto;
 
-#[derive(Debug, ProtoConvert, Eq, PartialEq)]
+#[derive(Debug, Clone, ProtoConvert, Eq, PartialEq)]
 #[proto_convert(source = "proto::Entity")]
 struct Entity {
     pub id: u32,
@@ -15,8 +15,8 @@ struct Entity {
 #[derive(Debug, ProtoConvert, Eq, PartialEq)]
 #[proto_convert(source = "proto::NestedEntity")]
 struct NestedEntity {
-    pub token: String,
-    pub inner: Entity,
+    pub first: Entity,
+    pub second: Entity,
 }
 
 #[test]
@@ -29,8 +29,8 @@ fn nested_entity_round_trip() {
     };
 
     let original = NestedEntity {
-        token: "nested_entity".into(),
-        inner: entity,
+        first: entity.clone(),
+        second: entity,
     };
 
     let p = original.to_proto();

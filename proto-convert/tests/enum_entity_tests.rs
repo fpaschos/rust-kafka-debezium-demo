@@ -3,7 +3,7 @@ use anyhow::Error;
 use proto_convert::{derive::ProtoConvert, ProtoConvert};
 
 mod proto;
-#[derive(Debug, ProtoConvert, PartialEq)]
+#[derive(Debug, Clone, ProtoConvert, PartialEq)]
 #[proto_convert(source = "proto::Entity")]
 struct Entity {
     pub id: u32,
@@ -15,8 +15,8 @@ struct Entity {
 #[derive(Debug, ProtoConvert, PartialEq)]
 #[proto_convert(source = "proto::NestedEntity")]
 struct NestedEntity {
-    pub token: String,
-    pub inner: Entity,
+    pub first: Entity,
+    pub second: Entity,
 }
 #[derive(Debug, ProtoConvert, PartialEq)]
 #[proto_convert(
