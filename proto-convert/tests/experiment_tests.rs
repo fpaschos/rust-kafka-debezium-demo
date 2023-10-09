@@ -1,4 +1,5 @@
 use anyhow::Error;
+use protobuf::Enum;
 use std::str::FromStr;
 use uuid::Uuid;
 /// Fully expanded and manual experiments (these used to build the macros and the library traits synergy)
@@ -93,12 +94,38 @@ impl ProtoConvert<String> for Uuid {
     }
 }
 
+#[derive(Debug, Clone, Copy, PartialEq)]
+enum EntityStatus {
+    StatusA,
+    StatusB,
+    StatusC,
+}
+
+impl ProtoConvert<proto::EntityStatus> for EntityStatus {
+    fn to_proto(&self) -> proto::EntityStatus {
+        match self {
+            Self::StatusA => proto::EntityStatus::STATUS_A,
+            Self::StatusB => proto::EntityStatus::STATUS_B,
+            Self::StatusC => proto::EntityStatus::STATUS_C,
+        }
+    }
+
+    fn from_proto(proto: proto::EntityStatus) -> Result<Self, Error> {
+        match proto {
+            proto::EntityStatus::STATUS_A => Ok(Self::StatusA),
+            proto::EntityStatus::STATUS_B => Ok(Self::StatusB),
+            proto::EntityStatus::STATUS_C => Ok(Self::StatusC),
+        }
+    }
+}
+
 #[derive(Debug, Clone, PartialEq)]
 struct Entity {
     pub id: u32,
     pub nonce: i32,
     pub valid: bool,
     pub name: String,
+    pub status: EntityStatus,
 }
 
 impl ProtoConvert<proto::Entity> for Entity {
@@ -108,6 +135,7 @@ impl ProtoConvert<proto::Entity> for Entity {
         msg.set_nonce(ProtoConvert::to_proto(&self.nonce).into());
         msg.set_valid(ProtoConvert::to_proto(&self.valid).into());
         msg.set_name(ProtoConvert::to_proto(&self.name).into());
+        msg.set_status(ProtoConvert::to_proto(&self.status).into());
         msg
     }
     fn from_proto(proto: proto::Entity) -> Result<Self, anyhow::Error> {
@@ -116,6 +144,7 @@ impl ProtoConvert<proto::Entity> for Entity {
             nonce: ProtoConvert::from_proto(proto.nonce().to_owned())?,
             valid: ProtoConvert::from_proto(proto.valid().to_owned())?,
             name: ProtoConvert::from_proto(proto.name().to_owned())?,
+            status: ProtoConvert::from_proto(proto.status().to_owned())?,
         };
         Ok(inner)
     }
@@ -131,6 +160,7 @@ struct EntityWithOptionals {
     pub opt_nonce: Option<i32>,
     pub opt_valid: Option<bool>,
     pub opt_name: Option<String>,
+    pub opt_status: Option<EntityStatus>,
 }
 
 impl ProtoConvert<proto::EntityWithOptionals> for EntityWithOptionals {
@@ -150,12 +180,17 @@ impl ProtoConvert<proto::EntityWithOptionals> for EntityWithOptionals {
         if let Some(value) = &self.opt_nonce {
             msg.set_opt_nonce(ProtoConvert::to_proto(value).into());
         }
+
         if let Some(value) = &self.opt_valid {
             msg.set_opt_valid(ProtoConvert::to_proto(value).into());
         }
 
         if let Some(value) = &self.opt_name {
             msg.set_opt_name(ProtoConvert::to_proto(value).into());
+        }
+
+        if let Some(value) = &self.opt_status {
+            msg.set_opt_status(ProtoConvert::to_proto(value).into());
         }
         msg
     }
@@ -193,6 +228,16 @@ impl ProtoConvert<proto::EntityWithOptionals> for EntityWithOptionals {
             opt_name: {
                 let v = proto.opt_name().to_owned();
                 if ProtoPrimitiveValue::has_value(&v) {
+                    Some(ProtoConvert::from_proto(v)?)
+                } else {
+                    None
+                }
+            },
+            // Special case for enumerations
+            opt_status: {
+                let v = proto.opt_status().to_owned();
+                // convert enum value to i32 in order to check ProtoPrimitive value
+                if ProtoPrimitiveValue::has_value(&v.value()) {
                     Some(ProtoConvert::from_proto(v)?)
                 } else {
                     None
@@ -271,12 +316,13 @@ impl ProtoConvert<proto::NestedEntity> for NestedEntity {
 }
 
 #[test]
-fn entity_test_roundtrip() {
+fn entity_test_round_trip() {
     let original = Entity {
         id: 1,
         nonce: 10,
         valid: true,
         name: "Foo".into(),
+        status: EntityStatus::StatusC,
     };
 
     let p = original.to_proto();
@@ -286,7 +332,7 @@ fn entity_test_roundtrip() {
 }
 
 #[test]
-fn test_entity_with_optionals_roundtrip() {
+fn test_entity_with_optionals_round_trips() {
     let original = EntityWithOptionals {
         id: 1,
         nonce: 10,
@@ -296,6 +342,24 @@ fn test_entity_with_optionals_roundtrip() {
         opt_nonce: None,
         opt_valid: None,
         opt_name: None,
+        opt_status: None,
+    };
+
+    let p = original.to_proto();
+    let tested = EntityWithOptionals::from_proto(p).unwrap();
+
+    assert_eq!(tested, original);
+
+    let original = EntityWithOptionals {
+        id: 1,
+        nonce: 10,
+        valid: true,
+        name: "Foo".into(),
+        opt_id: Some(1),
+        opt_nonce: Some(2),
+        opt_valid: Some(true),
+        opt_name: Some("Foo1".into()),
+        opt_status: Some(EntityStatus::StatusC),
     };
 
     let p = original.to_proto();
@@ -305,7 +369,7 @@ fn test_entity_with_optionals_roundtrip() {
 }
 
 #[test]
-fn test_entity_uuids_roundtrips() {
+fn test_entity_uuids_round_trips() {
     // Test with value
     let original = EntityUuids {
         uuid_str: Uuid::new_v4(),
@@ -328,12 +392,13 @@ fn test_entity_uuids_roundtrips() {
 }
 
 #[test]
-fn nested_entity_test_roundtrip() {
+fn nested_entity_test_round_trips() {
     let entity = Entity {
         id: 1,
         nonce: 10,
         valid: true,
         name: "Foo".into(),
+        status: EntityStatus::StatusB,
     };
 
     let original = NestedEntity {

@@ -9,6 +9,7 @@ struct Entity {
     pub nonce: i32,
     pub valid: bool,
     pub name: String,
+    pub status: EntityStatus,
 }
 
 #[derive(Debug, ProtoConvert, PartialEq)]
@@ -20,7 +21,7 @@ struct NestedEntity {
 #[derive(Debug, ProtoConvert, PartialEq)]
 #[proto_convert(
     source = "proto::HierarchyEntity",
-    oneof_field = "data",
+    one_of(field = "data"),
     rename_variants = "snake_case"
 )]
 enum HierarchyEntity {
@@ -28,21 +29,62 @@ enum HierarchyEntity {
     SecondEntity(NestedEntity),
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, ProtoConvert)]
+#[proto_convert(
+    source = "proto::EntityStatus",
+    enumeration,
+    rename_variants = "STREAMING_SNAKE_CASE"
+)]
+enum EntityStatus {
+    StatusA,
+    StatusB,
+    StatusC,
+}
+
 #[test]
-fn hierarchy_entity_round_trip() {
+fn enumeration_round_trips() {
+    let original = EntityStatus::StatusA;
+
+    let p = original.to_proto();
+    let tested = EntityStatus::from_proto(p).unwrap();
+    assert_eq!(tested, original);
+}
+
+#[test]
+fn hierarchy_entity_round_trips() {
     let entity = Entity {
         id: 1,
         nonce: 10,
         valid: true,
         name: "Foo".into(),
+        status: EntityStatus::StatusC,
     };
 
-    // let nested = NestedEntity {
-    //     token: "nested_entity".into(),
-    //     inner: entity,
-    // };
-
     let original = HierarchyEntity::FirstEntity(entity);
+
+    let p = original.to_proto();
+    let tested = HierarchyEntity::from_proto(p).unwrap();
+    assert_eq!(tested, original);
+
+    let first = Entity {
+        id: 2,
+        nonce: 20,
+        valid: false,
+        name: "Entity2".into(),
+        status: EntityStatus::StatusB,
+    };
+
+    let second = Entity {
+        id: 2,
+        nonce: 30,
+        valid: true,
+        name: "Entity3".into(),
+        status: EntityStatus::StatusA,
+    };
+
+    let nested = NestedEntity { first, second };
+
+    let original = HierarchyEntity::SecondEntity(nested);
 
     let p = original.to_proto();
     let tested = HierarchyEntity::from_proto(p).unwrap();
@@ -91,6 +133,7 @@ fn manual_hierarchy_entity_round_trip() {
         nonce: 10,
         valid: true,
         name: "Foo".into(),
+        status: EntityStatus::StatusB,
     };
 
     // let nested = NestedEntity {

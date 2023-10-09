@@ -1,3 +1,31 @@
+///TODO see https://rust-lang.github.io/api-guidelines/future-proofing.html#c-sealed for sealed trait
+pub trait ProtoPrimitiveValue: Sized {
+    fn has_value(&self) -> bool;
+}
+impl ProtoPrimitiveValue for u32 {
+    fn has_value(&self) -> bool {
+        *self != 0
+    }
+}
+
+impl ProtoPrimitiveValue for i32 {
+    fn has_value(&self) -> bool {
+        *self != 0
+    }
+}
+
+impl ProtoPrimitiveValue for String {
+    fn has_value(&self) -> bool {
+        !self.is_empty()
+    }
+}
+
+impl ProtoPrimitiveValue for bool {
+    fn has_value(&self) -> bool {
+        *self
+    }
+}
+
 pub trait ProtoConvert: Sized {
     /// Type of the protobuf clone of Self
     type ProtoStruct;

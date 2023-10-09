@@ -12,7 +12,6 @@ message Entity {
   string name = 5;
 
   EntityStatus status = 6;
-  EntityType type = 7;
 }
 
 message EntityWithOptionals {
@@ -24,21 +23,16 @@ message EntityWithOptionals {
   int32 opt_nonce = 7;
   bool opt_valid = 8;
   string opt_name = 9;
+  EntityStatus opt_status = 10;
+
 }
 
-// Enum for ClaimStatus
 enum EntityStatus {
   STATUS_A = 0;
   STATUS_B = 1;
   STATUS_C = 2;
 }
 
-// Enum for IncidentType
-enum EntityType {
-  TYPE_A = 0;
-  TYPE_B = 1;
-  TYPE_C = 2;
-}
 
 
 message EntityUuids {

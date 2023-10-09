@@ -12,8 +12,7 @@ fn parse2_extract_types_test() {
             pub id: u32,
             pub opt_id: std::option::Option<u32>,
             pub field: Whatever,
-            pub field: Option<Whatever>,
-
+            pub opt_field: Option<Whatever>,
         }
     };
 
