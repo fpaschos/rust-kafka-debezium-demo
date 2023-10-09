@@ -8,8 +8,6 @@ pub trait ProtoConvert<ProtoRepr>
 where
     Self: Sized,
 {
-    /// Type of the protobuf clone of Self
-
     /// Converts a reference of [`Self`] struct to proto [`Self::ProtoStruct`]
     fn to_proto(&self) -> ProtoRepr;
 
@@ -95,17 +93,7 @@ impl ProtoConvert<String> for Uuid {
     }
 }
 
-// impl ProtoConvertPrimitive<Vec> for Uuid {
-//     fn to_proto(&self) -> String {
-//         self.to_string()
-//     }
-//
-//     fn from_proto(proto: String) -> Result<Self, Error> {
-//         Ok(Uuid::from_str(&proto)?)
-//     }
-// }
-
-#[derive(Debug, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 struct Entity {
     pub id: u32,
     pub nonce: i32,
@@ -251,10 +239,35 @@ impl ProtoConvert<proto::EntityUuids> for EntityUuids {
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct NestedEntity {
     first: Entity,
     second: Option<Entity>,
+}
+
+impl ProtoConvert<proto::NestedEntity> for NestedEntity {
+    fn to_proto(&self) -> proto::NestedEntity {
+        let mut msg = proto::NestedEntity::default();
+        msg.set_first(ProtoConvert::to_proto(&self.first).into());
+        // Only if there is value other default
+        if let Some(value) = &self.second {
+            msg.set_second(ProtoConvert::to_proto(value).into());
+        }
+        msg
+    }
+    fn from_proto(proto: proto::NestedEntity) -> Result<Self, anyhow::Error> {
+        let inner = Self {
+            first: ProtoConvert::from_proto(proto.first().to_owned())?,
+            second: {
+                if proto.has_second() {
+                    Some(ProtoConvert::from_proto(proto.second().to_owned())?)
+                } else {
+                    None
+                }
+            },
+        };
+        Ok(inner)
+    }
 }
 
 #[test]
@@ -311,5 +324,35 @@ fn test_entity_uuids_roundtrips() {
 
     let p = original.to_proto();
     let tested = EntityUuids::from_proto(p).unwrap();
+    assert_eq!(tested, original);
+}
+
+#[test]
+fn nested_entity_test_roundtrip() {
+    let entity = Entity {
+        id: 1,
+        nonce: 10,
+        valid: true,
+        name: "Foo".into(),
+    };
+
+    let original = NestedEntity {
+        first: entity.clone(),
+        second: None,
+    };
+
+    let p = original.to_proto();
+    let tested = NestedEntity::from_proto(p).unwrap();
+
+    assert_eq!(tested, original);
+
+    let original = NestedEntity {
+        first: entity.clone(),
+        second: Some(entity.clone()),
+    };
+
+    let p = original.to_proto();
+    let tested = NestedEntity::from_proto(p).unwrap();
+
     assert_eq!(tested, original);
 }

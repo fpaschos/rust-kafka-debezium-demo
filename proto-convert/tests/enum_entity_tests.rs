@@ -1,4 +1,3 @@
-use crate::proto::hierarchy_entity::Data;
 use anyhow::Error;
 use proto_convert::{derive::ProtoConvert, ProtoConvert};
 
@@ -71,10 +70,10 @@ impl ProtoConvert for HierarchyEntityManual {
 
     fn from_proto(proto: Self::ProtoStruct) -> Result<Self, Error> {
         match proto.data {
-            Some(Data::FirstEntity(v)) => {
+            Some(proto::hierarchy_entity::Data::FirstEntity(v)) => {
                 Entity::from_proto(v).map(HierarchyEntityManual::FirstEntity)
             }
-            Some(Data::SecondEntity(v)) => {
+            Some(proto::hierarchy_entity::Data::SecondEntity(v)) => {
                 NestedEntity::from_proto(v).map(HierarchyEntityManual::SecondEntity)
             }
 
