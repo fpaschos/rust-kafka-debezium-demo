@@ -136,11 +136,6 @@ fn manual_hierarchy_entity_round_trip() {
         status: EntityStatus::StatusB,
     };
 
-    // let nested = NestedEntity {
-    //     token: "nested_entity".into(),
-    //     inner: entity,
-    // };
-
     let original = HierarchyEntityManual::FirstEntity(entity);
 
     let p = original.to_proto();
