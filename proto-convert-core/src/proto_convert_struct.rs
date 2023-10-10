@@ -1,9 +1,7 @@
-use crate::find_proto_convert_meta;
-use crate::impl_proto_convert::ProtoConvertFieldAttrs;
-use darling::FromMeta;
-use proc_macro2::Ident;
+use crate::attributes::{ProtoConvertFieldAttrs, ProtoConvertStructAttrs};
+use proc_macro2::{Ident, TokenStream};
 use quote::{quote, ToTokens};
-use syn::{Attribute, DataStruct, Path};
+use syn::{Attribute, DataStruct};
 
 #[derive(Debug)]
 pub(crate) struct ProtoConvertStruct {
@@ -49,18 +47,30 @@ impl ProtoConvertStruct {
             })
             .collect()
     }
-}
 
-impl ToTokens for ProtoConvertStruct {
-    fn to_tokens(&self, tokens: &mut proc_macro2::TokenStream) {
+    /// Implementation of `proto_convert` for rust `struct` items
+    fn impl_proto_convert(&self) -> TokenStream {
         let name = &self.name;
         let proto_struct = self.attrs.source.as_ref();
+
+        let to_proto_impl = {
+            let fields = self
+                .fields
+                .iter()
+                .map(|(ident, attrs)| attrs.impl_struct_field_getter(ident));
+
+            quote! {
+                let mut msg = Self::ProtoStruct::default();
+                #(#fields)*
+                msg
+            }
+        };
 
         let from_proto_impl = {
             let fields = self
                 .fields
                 .iter()
-                .map(|(ident, attrs)| attrs.impl_field_setter(ident));
+                .map(|(ident, attrs)| attrs.impl_struct_field_setter(ident));
 
             quote! {
                 let inner = Self {
@@ -70,49 +80,25 @@ impl ToTokens for ProtoConvertStruct {
             }
         };
 
-        let to_proto_impl = {
-            let fields = self
-                .fields
-                .iter()
-                .map(|(ident, attrs)| attrs.impl_field_getter(ident));
-
-            quote! {
-                let mut msg = Self::ProtoStruct::default();
-                #(#fields)*
-                msg
-            }
-        };
-
-        let expanded = quote! {
+        quote! {
             impl ProtoConvert for #name {
                 type ProtoStruct = #proto_struct;
-
-                fn from_proto(proto: Self::ProtoStruct) -> std::result::Result<Self, anyhow::Error> {
-                    #from_proto_impl
-                }
 
                 fn to_proto(&self) -> Self::ProtoStruct {
                     #to_proto_impl
                 }
+
+                fn from_proto(proto: Self::ProtoStruct) -> std::result::Result<Self, anyhow::Error> {
+                    #from_proto_impl
+                }
             }
-        };
-        tokens.extend(expanded);
+        }
     }
 }
 
-#[derive(Debug, FromMeta, Default)]
-#[darling(default)]
-pub(crate) struct ProtoConvertStructAttrs {
-    source: Option<Path>,
-}
-
-impl TryFrom<&[Attribute]> for ProtoConvertStructAttrs {
-    type Error = darling::Error;
-
-    fn try_from(attrs: &[Attribute]) -> Result<Self, Self::Error> {
-        let meta = find_proto_convert_meta(attrs).ok_or_else(|| {
-            darling::Error::unsupported_shape("Missing meta attribute `proto_convert`")
-        })?;
-        Self::from_meta(meta)
+impl ToTokens for ProtoConvertStruct {
+    fn to_tokens(&self, tokens: &mut proc_macro2::TokenStream) {
+        let expanded = self.impl_proto_convert();
+        tokens.extend(expanded);
     }
 }

@@ -12,6 +12,7 @@ message Entity {
   string name = 5;
 
   EntityStatus status = 6;
+  EntityType ty = 7;
 }
 
 message EntityWithOptionals {
@@ -31,6 +32,12 @@ enum EntityStatus {
   STATUS_A = 0;
   STATUS_B = 1;
   STATUS_C = 2;
+}
+
+enum EntityType {
+  TYPE_A = 0;
+  TYPE_B = 1;
+  TYPE_C = 2;
 }
 
 

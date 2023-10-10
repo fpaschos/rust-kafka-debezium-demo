@@ -1,8 +1,6 @@
-use crate::{
-    find_proto_convert_meta, SCREAMING_SNAKE_CASE_ATTRIBUTE_VALUE, SNAKE_CASE_ATTRIBUTE_VALUE,
-};
+use crate::{find_proto_convert_meta, rename_item};
 use darling::FromMeta;
-use heck::{ToShoutySnakeCase, ToSnakeCase, ToUpperCamelCase};
+use heck::{ToSnakeCase, ToUpperCamelCase};
 use proc_macro2::{Ident, Span, TokenStream};
 use quote::{quote, ToTokens};
 use syn::{Attribute, DataEnum, Fields, Path, Type, Variant};
@@ -41,7 +39,7 @@ impl ProtoConvertEnum {
         })
     }
 
-    /// Implementation of (`to_proto_impl`, `from_proto_impl`) for `enumeration` variant cases
+    /// Implementation of (`to_proto_impl`, `from_proto_impl`) for `enumeration` variant cases.
     fn impl_enumeration_to_from_proto(&self) -> (TokenStream, TokenStream) {
         // Proto struct name
         let proto_struct = &self.attrs.source;
@@ -84,12 +82,10 @@ impl ProtoConvertEnum {
         (to_proto_impl, from_proto_impl)
     }
 
-    /// Implementation of (`to_proto_impl`, `from_proto_impl`) for `one_of` variant cases
+    /// Implementation of (`to_proto_impl`, `from_proto_impl`) for `one_of` variant cases.
     fn impl_one_of_to_from_proto(&self) -> (TokenStream, TokenStream) {
         // Variant outer name
         let name = &self.name;
-        // Proto struct name
-        let proto_struct = &self.attrs.source;
 
         let to_proto_impl = {
             let match_arms = self.variants.iter().map(|variant| {
@@ -189,19 +185,7 @@ impl ProtoConvertEnum {
 
     fn get_proto_variant_name(&self, variant: &EnumVariant) -> String {
         if let Some(rename_variants) = self.attrs.rename_variants.as_ref() {
-            match rename_variants.as_ref() {
-                SNAKE_CASE_ATTRIBUTE_VALUE => variant.name.to_string().to_snake_case(),
-                SCREAMING_SNAKE_CASE_ATTRIBUTE_VALUE => {
-                    variant.name.to_string().to_shouty_snake_case()
-                }
-                _ => panic!(
-                    "{}",
-                    format!(
-                        "Unknown attribute `rename_variants` = `{}`",
-                        rename_variants
-                    )
-                ),
-            }
+            rename_item(&variant.name.to_string(), rename_variants).unwrap()
         } else {
             variant.name.to_string()
         }
@@ -224,6 +208,7 @@ pub(crate) struct OneOf {
     field: Ident,
 }
 
+/// Meta attributes for `enum` items.
 #[derive(Debug, FromMeta)]
 pub(crate) struct ProtoConvertEnumAttrs {
     /// The source proto entity that we map to

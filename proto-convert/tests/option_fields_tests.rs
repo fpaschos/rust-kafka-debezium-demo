@@ -1,5 +1,4 @@
 use proto_convert::{derive::ProtoConvert, ProtoConvert};
-use protobuf::Message;
 mod proto;
 #[derive(Debug, ProtoConvert, Eq, PartialEq, Default)]
 #[proto_convert(source = "proto::Entity")]
