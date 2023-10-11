@@ -1,11 +1,12 @@
-use crate::db::entities::ClaimOutboxEventDb;
-use crate::db::events::send_event;
-use crate::db::PostgresTx;
-use claims_core::proto_encode::encoder::ProtoEncoder;
-use claims_core::proto_encode::message::MessageKeyPair;
-use claims_model::model::{proto, Claim, Party};
-use schema_registry_converter::async_impl::easy_proto_raw::EasyProtoRawEncoder;
-use schema_registry_converter::async_impl::schema_registry::SrSettings;
+use crate::{db::entities::ClaimOutboxEventDb, db::events::send_event, db::PostgresTx};
+use claims_core::{proto_encode::encoder::ProtoEncoder, proto_encode::message::MessageKeyPair};
+use claims_model::{
+    model::proto::ProtoConvert,
+    model::{proto, Claim, Party},
+};
+use schema_registry_converter::{
+    async_impl::easy_proto_raw::EasyProtoRawEncoder, async_impl::schema_registry::SrSettings,
+};
 use std::sync::Arc;
 
 #[derive(Clone)]
@@ -24,7 +25,7 @@ impl EventService {
     pub async fn send_claim(&self, tx: &mut PostgresTx<'_>, claim: &Claim) -> anyhow::Result<()> {
         // Create the protobuf message from Claim
 
-        let proto: proto::claim::Claim = claim.clone().into();
+        let proto = claim.to_proto();
 
         // Encode the protobuf key is claim id as string
         let encoded = self

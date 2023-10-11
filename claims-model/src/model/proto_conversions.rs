@@ -1,6 +1,4 @@
-use crate::model::{
-    proto, Claim, ClaimStatus, IncidentType, Party, PartyData, PartySubtype, PartyType,
-};
+use crate::model::{Claim, ClaimStatus, IncidentType, Party, PartyData, PartySubtype, PartyType};
 use claims_schema::protos;
 use protobuf::{EnumOrUnknown, MessageField};
 

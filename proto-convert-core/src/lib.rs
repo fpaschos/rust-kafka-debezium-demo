@@ -19,7 +19,7 @@ pub(crate) fn find_proto_convert_meta(attrs: &[Attribute]) -> Option<&Meta> {
 }
 
 pub(crate) fn rename_item(item: &str, to_case: &str) -> darling::Result<String> {
-    match to_case.as_ref() {
+    match to_case {
         SNAKE_CASE_ATTRIBUTE_VALUE => Ok(item.to_string().to_snake_case()),
         SCREAMING_SNAKE_CASE_ATTRIBUTE_VALUE => Ok(item.to_string().to_shouty_snake_case()),
 

@@ -101,7 +101,7 @@ impl ProtoConvertFieldAttrs {
             }
             return rename.to_string();
         }
-        return field.to_string();
+        field.to_string()
     }
 }
 

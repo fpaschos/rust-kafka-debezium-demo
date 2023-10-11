@@ -1,12 +1,12 @@
 use anyhow::Context;
 use tokio::task::JoinHandle;
 
+use crate::config::AppConfig;
 use claims_core::kafka::proto_consumer;
 use claims_core::tracing::init;
-use claims_model::model::proto::claim::Claim;
 use claims_model::model::proto::party::Party;
-
-use crate::config::AppConfig;
+use claims_model::model::proto::ProtoConvert;
+use claims_model::model::{proto, Claim};
 
 mod common;
 mod config;
@@ -37,8 +37,9 @@ async fn main() -> anyhow::Result<()> {
 pub struct ClaimsHandler;
 
 impl ClaimsHandler {
-    pub async fn handle(&self, claim: Claim) -> anyhow::Result<()> {
-        tracing::debug!("Processing claim: {}", claim);
+    pub async fn handle(&self, proto: proto::claim::Claim) -> anyhow::Result<()> {
+        let claim: Claim = Claim::from_proto(proto)?;
+        tracing::debug!("Processing claim: {:?}", claim);
         Ok(())
     }
 }
@@ -54,12 +55,11 @@ pub fn spawn_claims_consumer(config: &AppConfig) -> JoinHandle<anyhow::Result<()
     let handler = ClaimsHandler;
 
     // Spawn a task to consume messages
-    let consumer = tokio::spawn(async move {
+    tokio::spawn(async move {
         consumer
             .consume(|c| async { handler.handle(c).await })
             .await
-    });
-    consumer
+    })
 }
 
 pub struct PartiesHandler;
@@ -82,10 +82,9 @@ pub fn spawn_parties_consumer(config: &AppConfig) -> JoinHandle<anyhow::Result<(
     let handler = PartiesHandler;
 
     // Spawn a task to consume messages
-    let consumer = tokio::spawn(async move {
+    tokio::spawn(async move {
         consumer
             .consume(|c| async { handler.handle(c).await })
             .await
-    });
-    consumer
+    })
 }

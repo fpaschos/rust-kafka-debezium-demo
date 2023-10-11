@@ -1,11 +1,17 @@
-#[cfg(feature = "proto")]
-pub mod proto_conversions;
+use proto_convert::derive::ProtoConvert;
+use proto_convert::ProtoConvert;
 use serde::{Deserialize, Serialize};
 
-// Re export proto models on "proto" feature
+// Re export proto_conversions on feature "proto"
+#[cfg(feature = "proto")]
+pub mod proto_conversions;
+
+// Re export proto models on feature "proto"
+// Re export proto_convert ProtoConvert on feature "proto"
 #[cfg(feature = "proto")]
 pub mod proto {
     pub use claims_schema::protos::*;
+    pub use proto_convert::ProtoConvert;
 }
 
 // <editor-fold desc="Claim models">
@@ -18,6 +24,15 @@ pub mod proto {
 #[cfg_attr(
     feature = "sqlx",
     sqlx(type_name = "VARCHAR", rename_all = "SCREAMING_SNAKE_CASE")
+)]
+#[cfg_attr(feature = "proto", derive(ProtoConvert))]
+#[cfg_attr(
+    feature = "proto",
+    proto_convert(
+        source = "proto::claimStatus::ClaimStatus",
+        enumeration,
+        rename_variants = "STREAMING_SNAKE_CASE"
+    )
 )]
 pub enum ClaimStatus {
     #[default]
@@ -37,6 +52,15 @@ pub enum ClaimStatus {
     feature = "sqlx",
     sqlx(type_name = "VARCHAR", rename_all = "SCREAMING_SNAKE_CASE")
 )]
+#[cfg_attr(feature = "proto", derive(ProtoConvert))]
+#[cfg_attr(
+    feature = "proto",
+    proto_convert(
+        source = "proto::incidentType::IncidentType",
+        enumeration,
+        rename_variants = "STREAMING_SNAKE_CASE"
+    )
+)]
 pub enum IncidentType {
     #[default]
     OtherDamage,
@@ -46,6 +70,8 @@ pub enum IncidentType {
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "proto", derive(ProtoConvert))]
+#[cfg_attr(feature = "proto", proto_convert(source = "proto::claim::Claim"))]
 pub struct Claim {
     pub id: i32,
     pub claim_no: String,
