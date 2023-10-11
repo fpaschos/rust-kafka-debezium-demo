@@ -14,15 +14,15 @@ impl ProtoPrimitiveValue for i32 {
     }
 }
 
-impl ProtoPrimitiveValue for String {
-    fn has_value(&self) -> bool {
-        !self.is_empty()
-    }
-}
-
 impl ProtoPrimitiveValue for bool {
     fn has_value(&self) -> bool {
         *self
+    }
+}
+
+impl ProtoPrimitiveValue for String {
+    fn has_value(&self) -> bool {
+        !self.is_empty()
     }
 }
 

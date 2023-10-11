@@ -38,7 +38,7 @@ pub(crate) struct ProtoConvertFieldAttrs {
 impl ProtoConvertFieldAttrs {
     // TODO support skip
     pub(crate) fn impl_struct_field_setter(&self, ident: &Ident) -> TokenStream {
-        let field_name = self.get_proto_field_name(ident);
+        let field_name = self.get_proto_field_name(ident, None);
         let proto_getter = Ident::new(&field_name, Span::call_site());
 
         let setter = if self.skip {
@@ -63,7 +63,7 @@ impl ProtoConvertFieldAttrs {
 
     pub(crate) fn impl_struct_field_getter(&self, ident: &Ident) -> TokenStream {
         // Handles rename
-        let field_name = self.get_proto_field_name(ident);
+        let field_name = self.get_proto_field_name(ident, Some('_'));
         let proto_setter = Ident::new(&format!("set_{}", field_name), Span::call_site());
         if self.skip {
             // Skipped getter does nothing.
@@ -89,12 +89,19 @@ impl ProtoConvertFieldAttrs {
         // }
     }
 
-    fn get_proto_field_name(&self, field: &Ident) -> String {
+    /// Returns a struct field name given an identifier and a rename field attribute.
+    /// remove_last_char_if is used in cases that we want to remove special characters such as '_'
+    fn get_proto_field_name(&self, field: &Ident, remove_last_char_if: Option<char>) -> String {
         if let Some(rename) = self.rename.as_ref() {
-            rename.clone()
-        } else {
-            field.to_string()
+            if let Some(c) = remove_last_char_if {
+                let mut rename_rev = rename.chars().rev().peekable();
+                if rename_rev.peek().copied() == Some(c) {
+                    return rename[..rename.len() - 1].to_string();
+                }
+            }
+            return rename.to_string();
         }
+        return field.to_string();
     }
 }
 

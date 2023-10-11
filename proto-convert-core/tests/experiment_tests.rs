@@ -1,5 +1,6 @@
 #![cfg(test)]
 
+use proc_macro2::Ident;
 use quote::quote;
 use syn::Fields::Named;
 use syn::{ItemStruct, Type};
@@ -18,7 +19,7 @@ fn parse2_extract_types_test() {
 
     let parsed = syn::parse2::<ItemStruct>(fragment.into()).unwrap();
 
-    let types: Vec<_> = if let Named(fields) = parsed.fields {
+    let types: Vec<Ident> = if let Named(fields) = parsed.fields {
         fields
             .named
             .iter()

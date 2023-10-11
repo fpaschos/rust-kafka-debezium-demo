@@ -36,7 +36,7 @@ struct Entity {
     #[proto_convert(skip)]
     pub name: String,
     pub status: EntityStatus,
-    #[proto_convert(rename = "ty")]
+    #[proto_convert(rename = "type_")]
     pub r#type: EntityType,
 }
 

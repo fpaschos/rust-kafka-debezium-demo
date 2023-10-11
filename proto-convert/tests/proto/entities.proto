@@ -12,7 +12,7 @@ message Entity {
   string name = 5;
 
   EntityStatus status = 6;
-  EntityType ty = 7;
+  EntityType type = 7;
 }
 
 message EntityWithOptionals {
