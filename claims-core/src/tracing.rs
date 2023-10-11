@@ -3,7 +3,7 @@ use tracing_subscriber::prelude::__tracing_subscriber_SubscriberExt;
 use tracing_subscriber::EnvFilter;
 
 pub fn init(config: &config::Log) -> anyhow::Result<()> {
-    Ok(init_log_and_tracing(|mut e| {
+    init_log_and_tracing(|mut e| {
         // Configure root level
         if let Some(root_level) = &config.level.root {
             e = e.add_directive(root_level.parse().unwrap_or_default())
@@ -15,7 +15,7 @@ pub fn init(config: &config::Log) -> anyhow::Result<()> {
             e = e.add_directive(directive_string.parse().unwrap_or_default());
         }
         e
-    })?)
+    })
 }
 
 pub fn init_log_and_tracing<T>(env_filter_customizer: T) -> anyhow::Result<()>

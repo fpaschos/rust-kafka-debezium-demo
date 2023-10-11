@@ -1,0 +1,21 @@
+[package]
+name = "proto-convert"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+
+[dependencies]
+proto-convert-derive = { path = "../proto-convert-derive" }
+anyhow = "1.0.75"
+
+
+
+[dev-dependencies]
+protobuf = "3.3.0"
+chrono = "0.4.31"
+uuid = { version = "1.4.1", features = ["v4"] }
+
+[build-dependencies]
+protobuf-codegen = "3.3.0"

@@ -13,6 +13,10 @@ fn main() {
             "resources/protos/incidentType.proto",
             "resources/protos/party.proto",
         ])
-        // .customize_callback(GenSerde)
+        .customize(
+            protobuf_codegen::Customize::default()
+                .generate_accessors(true)
+                .gen_mod_rs(true),
+        )
         .run_from_script();
 }

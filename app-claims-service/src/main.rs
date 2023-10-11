@@ -20,7 +20,7 @@ mod service;
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
     let config: AppConfig =
-        claims_core::config::load(&"./config/application.yml").context("Unable to load config")?;
+        claims_core::config::load("./config/application.yml").context("Unable to load config")?;
     let config = Arc::new(config);
     claims_core::tracing::init(&config.log)?;
 
