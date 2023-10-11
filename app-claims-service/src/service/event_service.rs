@@ -2,7 +2,7 @@ use crate::{db::entities::ClaimOutboxEventDb, db::events::send_event, db::Postgr
 use claims_core::{proto_encode::encoder::ProtoEncoder, proto_encode::message::MessageKeyPair};
 use claims_model::{
     model::proto::ProtoConvert,
-    model::{proto, Claim, Party},
+    model::{Claim, Party},
 };
 use schema_registry_converter::{
     async_impl::easy_proto_raw::EasyProtoRawEncoder, async_impl::schema_registry::SrSettings,
@@ -51,7 +51,7 @@ impl EventService {
     pub async fn send_party(&self, tx: &mut PostgresTx<'_>, party: &Party) -> anyhow::Result<()> {
         // Create the protobuf message from Claim
 
-        let proto: proto::party::Party = party.clone().into();
+        let proto = party.to_proto();
 
         // Encode the protobuf key is claim id as string
         let encoded = self

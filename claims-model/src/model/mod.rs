@@ -2,10 +2,6 @@ use proto_convert::derive::ProtoConvert;
 use proto_convert::ProtoConvert;
 use serde::{Deserialize, Serialize};
 
-// Re export proto_conversions on feature "proto"
-#[cfg(feature = "proto")]
-pub mod proto_conversions;
-
 // Re export proto models on feature "proto"
 // Re export proto_convert ProtoConvert on feature "proto"
 #[cfg(feature = "proto")]
@@ -92,6 +88,15 @@ pub struct Claim {
     feature = "sqlx",
     sqlx(type_name = "VARCHAR", rename_all = "SCREAMING_SNAKE_CASE")
 )]
+#[cfg_attr(feature = "proto", derive(ProtoConvert))]
+#[cfg_attr(
+    feature = "proto",
+    proto_convert(
+        source = "proto::party::PartyType",
+        enumeration,
+        rename_variants = "STREAMING_SNAKE_CASE"
+    )
+)]
 pub enum PartyType {
     #[default]
     Person,
@@ -108,6 +113,15 @@ pub enum PartyType {
     feature = "sqlx",
     sqlx(type_name = "VARCHAR", rename_all = "SCREAMING_SNAKE_CASE")
 )]
+#[cfg_attr(feature = "proto", derive(ProtoConvert))]
+#[cfg_attr(
+    feature = "proto",
+    proto_convert(
+        source = "proto::party::PartySubtype",
+        enumeration,
+        rename_variants = "STREAMING_SNAKE_CASE"
+    )
+)]
 pub enum PartySubtype {
     Car,
     Motorbike,
@@ -123,9 +137,12 @@ pub enum PartySubtype {
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "proto", derive(ProtoConvert))]
+#[cfg_attr(feature = "proto", proto_convert(source = "proto::party::Party"))]
 pub struct Party {
     pub id: i32,
     pub claim_id: i32,
+    #[cfg_attr(feature = "proto", proto_convert(rename = "type_"))]
     pub r#type: PartyType,
     pub subtype: PartySubtype,
     pub data: PartyData,
@@ -134,6 +151,15 @@ pub struct Party {
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 #[serde(tag = "type")]
+#[cfg_attr(feature = "proto", derive(ProtoConvert))]
+#[cfg_attr(
+    feature = "proto",
+    proto_convert(
+        source = "proto::party::PartyData",
+        one_of(field = "data"),
+        rename_variants = "snake_case"
+    )
+)]
 pub enum PartyData {
     #[serde(rename = "PERSON")]
     Person(Person),
@@ -159,6 +185,8 @@ impl PartyData {
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "proto", derive(ProtoConvert))]
+#[cfg_attr(feature = "proto", proto_convert(source = "proto::party::Person"))]
 pub struct Person {
     pub subtype: PartySubtype,
     pub name: String,
@@ -166,6 +194,8 @@ pub struct Person {
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "proto", derive(ProtoConvert))]
+#[cfg_attr(feature = "proto", proto_convert(source = "proto::party::Vehicle"))]
 pub struct Vehicle {
     pub subtype: PartySubtype,
     pub reg_no: String,

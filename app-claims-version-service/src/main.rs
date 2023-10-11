@@ -4,9 +4,8 @@ use tokio::task::JoinHandle;
 use crate::config::AppConfig;
 use claims_core::kafka::proto_consumer;
 use claims_core::tracing::init;
-use claims_model::model::proto::party::Party;
 use claims_model::model::proto::ProtoConvert;
-use claims_model::model::{proto, Claim};
+use claims_model::model::{proto, Claim, Party};
 
 mod common;
 mod config;
@@ -65,8 +64,9 @@ pub fn spawn_claims_consumer(config: &AppConfig) -> JoinHandle<anyhow::Result<()
 pub struct PartiesHandler;
 
 impl PartiesHandler {
-    pub async fn handle(&self, party: Party) -> anyhow::Result<()> {
-        tracing::debug!("Processing party: {}", party);
+    pub async fn handle(&self, proto: proto::party::Party) -> anyhow::Result<()> {
+        let party = Party::from_proto(proto)?;
+        tracing::debug!("Processing party: {:?}", party);
         Ok(())
     }
 }

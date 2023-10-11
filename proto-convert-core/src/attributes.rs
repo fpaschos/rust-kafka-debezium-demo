@@ -36,7 +36,6 @@ pub(crate) struct ProtoConvertFieldAttrs {
 }
 
 impl ProtoConvertFieldAttrs {
-    // TODO support skip
     pub(crate) fn impl_struct_field_setter(&self, ident: &Ident) -> TokenStream {
         let field_name = self.get_proto_field_name(ident, None);
         let proto_getter = Ident::new(&field_name, Span::call_site());
