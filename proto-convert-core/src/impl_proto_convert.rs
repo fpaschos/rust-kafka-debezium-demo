@@ -6,8 +6,9 @@ use quote::{quote, ToTokens};
 use syn::{Data, DeriveInput};
 
 pub fn implement_proto_convert(input: TokenStream) -> TokenStream {
-    let input = ProtoConvert::from_derive_input(&syn::parse(input.into()).unwrap())
-        .unwrap_or_else(|e| panic!("ProtoConvert: {}", e));
+    let input: DeriveInput = syn::parse(input.into()).unwrap();
+    let input =
+        ProtoConvert::from_derive_input(&input).unwrap_or_else(|e| panic!("ProtoConvert: {}", e));
     quote! { #input }
 }
 

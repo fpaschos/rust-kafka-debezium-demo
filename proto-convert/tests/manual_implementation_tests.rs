@@ -1,4 +1,3 @@
-use anyhow::Error;
 use protobuf::Enum;
 use std::str::FromStr;
 use uuid::Uuid;
@@ -89,7 +88,7 @@ impl ProtoConvert<String> for Uuid {
         self.to_string()
     }
 
-    fn from_proto(proto: String) -> Result<Self, Error> {
+    fn from_proto(proto: String) -> Result<Self, anyhow::Error> {
         Ok(Uuid::from_str(&proto)?)
     }
 }
@@ -110,7 +109,7 @@ impl ProtoConvert<proto::EntityStatus> for EntityStatus {
         }
     }
 
-    fn from_proto(proto: proto::EntityStatus) -> Result<Self, Error> {
+    fn from_proto(proto: proto::EntityStatus) -> Result<Self, anyhow::Error> {
         match proto {
             proto::EntityStatus::STATUS_A => Ok(Self::StatusA),
             proto::EntityStatus::STATUS_B => Ok(Self::StatusB),

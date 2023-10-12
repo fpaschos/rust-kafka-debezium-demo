@@ -1,4 +1,4 @@
-///TODO see https://rust-lang.github.io/api-guidelines/future-proofing.html#c-sealed for sealed trait
+////TODO see https://rust-lang.github.io/api-guidelines/future-proofing.html#c-sealed for sealed trait
 pub trait ProtoPrimitiveValue: Sized {
     fn has_value(&self) -> bool;
 }

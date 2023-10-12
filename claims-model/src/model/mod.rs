@@ -125,12 +125,10 @@ pub enum PartyType {
 pub enum PartySubtype {
     Car,
     Motorbike,
-
     Owner,
     Beneficiary,
     Driver,
     Passenger,
-
     #[default]
     Other,
 }
