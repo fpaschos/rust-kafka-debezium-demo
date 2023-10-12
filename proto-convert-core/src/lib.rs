@@ -2,9 +2,13 @@ use heck::{ToShoutySnakeCase, ToSnakeCase};
 use syn::{Attribute, Meta};
 
 mod attributes;
+mod experimental;
 pub mod impl_proto_convert;
 mod proto_convert_enum;
 mod proto_convert_struct;
+
+#[cfg(test)]
+mod tests;
 
 const CONVERT_ATTRIBUTE: &str = "proto_convert";
 const SNAKE_CASE_ATTRIBUTE_VALUE: &str = "snake_case";
