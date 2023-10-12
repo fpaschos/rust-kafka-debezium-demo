@@ -11,7 +11,7 @@ popd () {
 cd $SCRIPT_DIR
 
 # Copy proto files to setter project
-cp -R ../claims-schema/resources/protos ../claims-schema-setter/src/main/resources
+cp -R ../claims-schema/resources/proto ../claims-schema-setter/src/main/resources
 
 # Run mvn register command against target schema registry
 pushd ..

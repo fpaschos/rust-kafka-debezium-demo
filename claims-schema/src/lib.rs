@@ -1,10 +1,10 @@
 use claims_core::schema_name_impl;
 
-pub mod protos;
+pub mod proto;
 
-use protos::claim::Claim;
+use proto::claim::Claim;
+use proto::party::Party;
 
-use crate::protos::party::Party;
 use claims_core::proto_encode::message::SchemaName;
 
 // Needed for correctly using proto_encoder
@@ -15,15 +15,14 @@ schema_name_impl!(CLAIMS_SCHEMA, Party);
 
 #[cfg(test)]
 mod tests {
+
     use protobuf::Message;
 
-    use protos::{claimStatus::ClaimStatus, incidentType::IncidentType};
-
-    use crate::protos;
+    use crate::proto::claim::{Claim, ClaimStatus, IncidentType};
 
     #[test]
     fn claim_serialize_deserialize() {
-        let input = protos::claim::Claim {
+        let input = Claim {
             id: 1,
             claim_no: "TRG1000".into(),
             status: ClaimStatus::OPEN.into(),
@@ -31,7 +30,7 @@ mod tests {
             ..Default::default()
         };
         let serialized = input.write_to_bytes().unwrap();
-        let output = protos::claim::Claim::parse_from_bytes(&serialized).unwrap();
+        let output = Claim::parse_from_bytes(&serialized).unwrap();
         assert_eq!(input, output);
     }
 }

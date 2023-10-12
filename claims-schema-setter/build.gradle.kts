@@ -26,7 +26,7 @@ plugins {
     id("com.github.imflog.kafka-schema-registry-gradle-plugin") version "1.11.1"
 }
 
-val protosPath = "claims-schema-setter/src/main/resources/protos/"
+val protosPath = "claims-schema-setter/src/main/resources/proto/"
 
 
 schemaRegistry {
@@ -35,21 +35,21 @@ schemaRegistry {
 
     register {
         // Register schema for each entity separately
-        subject("claimStatus", protosPath + "claimStatus.proto", "PROTOBUF")
-        subject("incidentType", protosPath + "incidentType.proto", "PROTOBUF")
+        subject("claimStatus", protosPath + "claim.proto", "PROTOBUF")
+        subject("incidentType", protosPath + "claim.proto", "PROTOBUF")
         subject("claim", protosPath + "claim.proto", "PROTOBUF")
-            .addReference("claimStatus.proto", "claimStatus", -1)
-            .addReference("incidentType.proto", "incidentType", -1)
+//            .addReference("claimStatus.proto", "claimStatus", -1)
+//            .addReference("incidentType.proto", "incidentType", -1)
 
         // Register schema for test topic "claims.test-value"
         subject("claims.test-value", protosPath + "claim.proto", "PROTOBUF")
-            .addReference("claimStatus.proto", "claimStatus", -1)
-            .addReference("incidentType.proto", "incidentType", -1)
+//            .addReference("claimStatus.proto", "claimStatus", -1)
+//            .addReference("incidentType.proto", "incidentType", -1)
 
         // Register schema for test topic "claimsdb.claim.events" outbox table topic
         subject("claimsdb.claim.events-value", protosPath + "claim.proto", "PROTOBUF")
-            .addReference("claimStatus.proto", "claimStatus", -1)
-            .addReference("incidentType.proto", "incidentType", -1)
+//            .addReference("claimStatus.proto", "claimStatus", -1)
+//            .addReference("incidentType.proto", "incidentType", -1)
 
         // Register schema for test topic "claimsdb.claim.events" outbox table topic
         subject("claimsdb.party.events-value", protosPath + "party.proto", "PROTOBUF")

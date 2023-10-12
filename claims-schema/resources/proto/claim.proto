@@ -1,0 +1,30 @@
+syntax = "proto3";
+
+import "google/protobuf/wrappers.proto";
+
+package claims.schema;
+
+// Claim entity
+message Claim {
+  int32 id = 1;
+  string claim_no = 2;
+  ClaimStatus status = 3;
+  IncidentType incident_type = 4;
+}
+
+
+// Enum for ClaimStatus
+enum ClaimStatus {
+  OPEN = 0;
+  CLOSED = 1;
+  CANCELLED = 2;
+  UNDER_REVISION = 3;
+}
+
+// Enum for IncidentType
+enum IncidentType {
+  OTHER_DAMAGE = 0;
+  COLLISION = 1;
+  ROAD_ASSISTANCE = 2;
+}
+

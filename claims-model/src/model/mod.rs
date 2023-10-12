@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 // Re export proto_convert ProtoConvert on feature "proto"
 #[cfg(feature = "proto")]
 pub mod proto {
-    pub use claims_schema::protos::*;
+    pub use claims_schema::proto::*;
     pub use proto_convert::ProtoConvert;
 }
 
@@ -25,7 +25,7 @@ pub mod proto {
 #[cfg_attr(
     feature = "proto",
     proto_convert(
-        source = "proto::claimStatus::ClaimStatus",
+        source = "proto::claim::ClaimStatus",
         enumeration,
         rename_variants = "STREAMING_SNAKE_CASE"
     )
@@ -52,7 +52,7 @@ pub enum ClaimStatus {
 #[cfg_attr(
     feature = "proto",
     proto_convert(
-        source = "proto::incidentType::IncidentType",
+        source = "proto::claim::IncidentType",
         enumeration,
         rename_variants = "STREAMING_SNAKE_CASE"
     )

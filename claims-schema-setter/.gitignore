@@ -16,3 +16,4 @@ build/
 
 ### Protos are copied from other source ###
 src/main/resources/protos
+src/main/resources/proto
