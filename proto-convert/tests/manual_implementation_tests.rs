@@ -129,13 +129,13 @@ struct Entity {
 
 impl ProtoConvert<proto::Entity> for Entity {
     fn to_proto(&self) -> proto::Entity {
-        let mut msg = proto::Entity::default();
-        msg.set_id(ProtoConvert::to_proto(&self.id).into());
-        msg.set_nonce(ProtoConvert::to_proto(&self.nonce).into());
-        msg.set_valid(ProtoConvert::to_proto(&self.valid).into());
-        msg.set_name(ProtoConvert::to_proto(&self.name).into());
-        msg.set_status(ProtoConvert::to_proto(&self.status).into());
-        msg
+        let mut proto = proto::Entity::default();
+        proto.set_id(ProtoConvert::to_proto(&self.id).into());
+        proto.set_nonce(ProtoConvert::to_proto(&self.nonce).into());
+        proto.set_valid(ProtoConvert::to_proto(&self.valid).into());
+        proto.set_name(ProtoConvert::to_proto(&self.name).into());
+        proto.set_status(ProtoConvert::to_proto(&self.status).into());
+        proto
     }
     fn from_proto(proto: proto::Entity) -> Result<Self, anyhow::Error> {
         let inner = Self {
@@ -164,34 +164,34 @@ struct EntityWithOptionals {
 
 impl ProtoConvert<proto::EntityWithOptionals> for EntityWithOptionals {
     fn to_proto(&self) -> proto::EntityWithOptionals {
-        let mut msg = proto::EntityWithOptionals::default();
-        msg.set_id(ProtoConvert::to_proto(&self.id).into());
-        msg.set_nonce(ProtoConvert::to_proto(&self.nonce).into());
-        msg.set_valid(ProtoConvert::to_proto(&self.valid).into());
-        msg.set_name(ProtoConvert::to_proto(&self.name).into());
+        let mut proto = proto::EntityWithOptionals::default();
+        proto.set_id(ProtoConvert::to_proto(&self.id).into());
+        proto.set_nonce(ProtoConvert::to_proto(&self.nonce).into());
+        proto.set_valid(ProtoConvert::to_proto(&self.valid).into());
+        proto.set_name(ProtoConvert::to_proto(&self.name).into());
 
         // Only if there is value other default
         if let Some(value) = &self.opt_id {
-            msg.set_opt_id(ProtoConvert::to_proto(value).into());
+            proto.set_opt_id(ProtoConvert::to_proto(value).into());
         }
 
         // Only if there is value other default
         if let Some(value) = &self.opt_nonce {
-            msg.set_opt_nonce(ProtoConvert::to_proto(value).into());
+            proto.set_opt_nonce(ProtoConvert::to_proto(value).into());
         }
 
         if let Some(value) = &self.opt_valid {
-            msg.set_opt_valid(ProtoConvert::to_proto(value).into());
+            proto.set_opt_valid(ProtoConvert::to_proto(value).into());
         }
 
         if let Some(value) = &self.opt_name {
-            msg.set_opt_name(ProtoConvert::to_proto(value).into());
+            proto.set_opt_name(ProtoConvert::to_proto(value).into());
         }
 
         if let Some(value) = &self.opt_status {
-            msg.set_opt_status(ProtoConvert::to_proto(value).into());
+            proto.set_opt_status(ProtoConvert::to_proto(value).into());
         }
-        msg
+        proto
     }
     fn from_proto(proto: proto::EntityWithOptionals) -> Result<Self, anyhow::Error> {
         let inner = Self {
@@ -257,15 +257,15 @@ pub struct EntityUuids {
 
 impl ProtoConvert<proto::EntityUuids> for EntityUuids {
     fn to_proto(&self) -> proto::EntityUuids {
-        let mut msg = proto::EntityUuids::default();
-        msg.set_uuid_str(ProtoConvert::to_proto(&self.uuid_str).into());
+        let mut proto = proto::EntityUuids::default();
+        proto.set_uuid_str(ProtoConvert::to_proto(&self.uuid_str).into());
 
         // Only if there is value other default
         if let Some(value) = &self.opt_uuid_str {
-            msg.set_opt_uuid_str(ProtoConvert::to_proto(value).into());
+            proto.set_opt_uuid_str(ProtoConvert::to_proto(value).into());
         }
 
-        msg
+        proto
     }
     fn from_proto(proto: proto::EntityUuids) -> Result<Self, anyhow::Error> {
         let inner = Self {
@@ -291,13 +291,13 @@ pub struct NestedEntity {
 
 impl ProtoConvert<proto::NestedEntity> for NestedEntity {
     fn to_proto(&self) -> proto::NestedEntity {
-        let mut msg = proto::NestedEntity::default();
-        msg.set_first(ProtoConvert::to_proto(&self.first).into());
+        let mut proto = proto::NestedEntity::default();
+        proto.set_first(ProtoConvert::to_proto(&self.first).into());
         // Only if there is value other default
         if let Some(value) = &self.second {
-            msg.set_second(ProtoConvert::to_proto(value).into());
+            proto.set_second(ProtoConvert::to_proto(value).into());
         }
-        msg
+        proto
     }
     fn from_proto(proto: proto::NestedEntity) -> Result<Self, anyhow::Error> {
         let inner = Self {

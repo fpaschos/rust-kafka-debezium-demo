@@ -1,5 +1,6 @@
 use darling::FromMeta;
-use proc_macro2::Ident;
+use proc_macro2::{Ident, TokenStream};
+use quote::{format_ident, quote};
 use syn::{Attribute, Data, DataStruct, DeriveInput, GenericArgument, Path, PathArguments, Type};
 
 use crate::find_proto_convert_meta;
@@ -43,7 +44,7 @@ impl Ty {
         Self::Primitive { ty, optional }
     }
 
-    pub(crate) fn enumerations(ty: Path, optional: bool) -> Self {
+    pub(crate) fn enumeration(ty: Path, optional: bool) -> Self {
         Self::Enumeration { ty, optional }
     }
 
@@ -69,34 +70,31 @@ impl Ty {
                         if args.args.iter().count() > 1 {
                             // Types with more than one generic argument are classified as other
                             Ok(Ty::other(path.clone(), false))
-                        } else {
-                            if last_segment.ident == "Option" {
-                                // Type is option check the inner type
-                                let gen = args.args.iter().next().unwrap();
+                        } else if last_segment.ident == "Option" {
+                            // Type is option check the inner type
+                            let gen = args.args.iter().next().unwrap();
 
-                                if let GenericArgument::Type(Type::Path(t)) = gen {
-                                    let last_segment = t.path.segments.last().unwrap(); // TODO what if there is no last segment
-                                                                                        // Check only for primitive types or any other type
-                                    if let Some(ty) =
-                                        maybe_known_primitive_type(&last_segment.ident)
-                                    {
-                                        Ok(Ty::primitive(ty, true))
-                                    } else {
-                                        Ok(Ty::other(path.clone(), true))
-                                    }
+                            if let GenericArgument::Type(Type::Path(t)) = gen {
+                                let last_segment = t.path.segments.last().unwrap(); // TODO what if there is no last segment
+                                                                                    // Check only for primitive types or any other type
+                                if let Some(ty) = maybe_known_primitive_type(&last_segment.ident) {
+                                    Ok(Ty::primitive(ty, true))
                                 } else {
-                                    Err(
-                                        darling::Error::unexpected_type(
-                                            "Macro only supports path argument types",
-                                        ), // .with_span(&field.span()), TODO test this
-                                    )
+                                    Ok(Ty::other(path.clone(), true))
                                 }
                             } else {
-                                // The type is not Option return it as other non optional
-                                Ok(Ty::other(path.clone(), false))
+                                Err(
+                                    darling::Error::unexpected_type(
+                                        "Macro only supports path argument types",
+                                    ), // .with_span(&field.span()), TODO test this
+                                )
                             }
+                        } else {
+                            // The type is not Option return it as other non optional
+                            Ok(Ty::other(path.clone(), false))
                         }
                     }
+
                     PathArguments::Parenthesized(_) => {
                         Err(
                             darling::Error::unexpected_type(
@@ -123,7 +121,7 @@ impl Ty {
 }
 
 pub(crate) struct StructField {
-    pub name: String,
+    pub name: String, // TODO keep ident of field here for better error handling
     pub ty: Ty,
     pub attrs: Option<FieldAttrs>,
 }
@@ -141,18 +139,63 @@ impl StructField {
             darling::Error::unsupported_shape("Macro supports only structs with named fields")
         })?;
 
+        let meta = find_proto_convert_meta(&field.attrs);
+        let attrs = if let Some(meta) = meta {
+            Some(FieldAttrs::from_meta(meta)?)
+        } else {
+            None
+        };
+
         let ty = Ty::try_from_field(field)?;
 
         Ok(Self {
             name: name.to_string(),
             ty,
-            attrs: None,
+            attrs,
         })
+    }
+
+    // TODO use struct attrs for rename_all
+    pub(crate) fn implement_getter(&self, _struct_attrs: &StructAttrs) -> TokenStream {
+        // Fast handle skip attribute
+        if let Some(FieldAttrs { skip: true, .. }) = &self.attrs {
+            return quote! {};
+        }
+
+        // TODO extract final proto name field name
+        let proto_field_name = &self.name;
+
+        let field_getter = quote::format_ident!("{}", self.name);
+        let proto_field_setter = quote::format_ident!("set_{}", proto_field_name);
+        if self.ty.is_optional() {
+            // Optional field setter
+            quote! {
+                if let Some(value) = &self.#field_getter {
+                    proto.#proto_field_setter(ProtoConvert::to_proto(value).into());
+                }
+            }
+        } else {
+            // Non optional field just a setter
+            quote! {
+                proto.#proto_field_setter(ProtoConvert::to_proto(&self.#field_getter).into());
+            }
+        }
+    }
+
+    // TODO use struct attrs for rename_all
+    pub(crate) fn implement_setter(&self, _struct_attrs: &StructAttrs) -> TokenStream {
+        // Fast fail skip attribute
+        if let Some(FieldAttrs { skip: true, .. }) = &self.attrs {
+            // Default struct setter for the skipped fields.
+            return quote! { Default::default() };
+        }
+
+        quote! {}
     }
 }
 
 pub(crate) struct Struct {
-    pub name: String,
+    pub name: String, // TODO keep ident of struct name here for better error handling
     pub attrs: StructAttrs,
     pub fields: Vec<StructField>,
 }
@@ -181,6 +224,44 @@ impl Struct {
             attrs,
         })
     }
+
+    pub(crate) fn implement_proto_convert(&self) -> TokenStream {
+        let struct_name = format_ident!("{}", &self.name);
+        let proto_struct = &self.attrs.source;
+        let to_proto_impl = {
+            let fields = self.fields.iter().map(|f| f.implement_getter(&self.attrs));
+
+            quote! {
+                let mut proto = #proto_struct::default();
+                #(#fields)*
+                proto
+            }
+        };
+
+        let from_proto_impl = {
+            let fields = self.fields.iter().map(|f| f.implement_setter(&self.attrs));
+
+            quote! {
+                let inner = Self {
+                    #(#fields)*
+                };
+                Ok(inner)
+            }
+        };
+
+        quote! {
+            impl ProtoConvert<#proto_struct> for #struct_name {
+
+                fn to_proto(&self) -> #proto_struct {
+                    #to_proto_impl
+                }
+
+                fn from_proto(proto: #proto_struct) -> std::result::Result<Self, anyhow::Error> {
+                    #from_proto_impl
+                }
+            }
+        }
+    }
 }
 
 /// Meta attributes for `struct` items
@@ -191,8 +272,16 @@ pub(crate) struct StructAttrs {
     pub rename_all: Option<String>,
 }
 
-#[derive(Debug)]
-pub(crate) struct FieldAttrs {}
+#[derive(Debug, darling::FromMeta, Default)]
+#[darling(default)]
+pub(crate) struct FieldAttrs {
+    /// Optional skipping struct field from proto serialization
+    pub skip: bool,
+    /// Optional mark the field as an enumeration mapping (used only for optional getter/setter mapping)
+    pub enumeration: bool,
+    /// Optional renaming of a single struct field before mapping to the proto entity.
+    pub rename: Option<String>,
+}
 
 pub(crate) fn from_derive_input(input: &DeriveInput) -> darling::Result<Struct> {
     match &input.data {

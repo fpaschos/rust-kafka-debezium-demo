@@ -2,7 +2,7 @@ use darling::FromMeta;
 use quote::quote;
 use syn::{Data, DeriveInput};
 
-use crate::experimental::{from_derive_input, PrimitiveTy, StructAttrs, StructField, Ty};
+use crate::experimental::{PrimitiveTy, StructAttrs, StructField, Ty};
 
 #[test]
 fn parse_struct_attributes_test() {
@@ -128,8 +128,6 @@ fn parse_nested_types_test() {
 
     let input = syn::parse2::<DeriveInput>(fragment.into()).unwrap();
 
-    let s = from_derive_input(&input).unwrap();
-
     let Data::Struct(data) = &input.data else {
         panic!("Expected Data::Struct here");
     };
@@ -199,4 +197,57 @@ fn unsupported_tuple_primitive_field_test() {
 
     let res = StructField::try_from_field(field);
     assert!(res.is_err())
+}
+
+#[test]
+fn parse_struct_field_attributes_test() {
+    let fragment = quote! {
+        struct Test {
+            a: u32,
+            #[proto_convert(rename="awesome_b")]
+            b: i32,
+            #[proto_convert(skip)]
+            c: bool,
+            #[proto_convert(enumeration)]
+            d: Option<Whatever>
+
+        }
+    };
+
+    let input = syn::parse2::<DeriveInput>(fragment.into()).unwrap();
+
+    let Data::Struct(data) = &input.data else {
+        panic!("Expected Data::Struct here");
+    };
+
+    let mut fields = data.fields.iter();
+
+    let field = fields.next().unwrap();
+    let field = StructField::try_from_field(field).unwrap();
+
+    assert!(field.attrs.is_none());
+
+    let field = fields.next().unwrap();
+    let field = StructField::try_from_field(field).unwrap();
+
+    assert_eq!(field.name, "b".to_string());
+    assert!(field.attrs.is_some());
+    let attrs = field.attrs.unwrap();
+    assert_eq!(attrs.rename, Some("awesome_b".to_string()));
+
+    let field = fields.next().unwrap();
+    let field = StructField::try_from_field(field).unwrap();
+
+    assert_eq!(field.name, "c".to_string());
+    assert!(field.attrs.is_some());
+    let attrs = field.attrs.unwrap();
+    assert!(attrs.skip);
+
+    let field = fields.next().unwrap();
+    let field = StructField::try_from_field(field).unwrap();
+
+    assert_eq!(field.name, "d".to_string());
+    assert!(field.attrs.is_some());
+    let attrs = field.attrs.unwrap();
+    assert!(attrs.enumeration);
 }
