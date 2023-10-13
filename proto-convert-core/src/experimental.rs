@@ -15,7 +15,9 @@ pub(crate) enum PrimitiveTy {
     I64,
     Bool,
     String,
-    Bytes,
+    VecBytes, // TODO how to handle this?
+    // Special case for enumerations fall back to u32
+    Enumeration,
 }
 
 fn maybe_known_primitive_type(ident: &Ident) -> Option<PrimitiveTy> {
@@ -35,7 +37,6 @@ fn maybe_known_primitive_type(ident: &Ident) -> Option<PrimitiveTy> {
 #[derive(Debug, PartialEq)]
 pub(crate) enum Ty {
     Primitive { ty: PrimitiveTy, optional: bool },
-    Enumeration { ty: Path, optional: bool },
     Other { ty: Path, optional: bool },
 }
 
@@ -44,12 +45,21 @@ impl Ty {
         Self::Primitive { ty, optional }
     }
 
-    pub(crate) fn enumeration(ty: Path, optional: bool) -> Self {
-        Self::Enumeration { ty, optional }
-    }
-
     pub(crate) fn other(ty: Path, optional: bool) -> Self {
         Self::Other { ty, optional }
+    }
+
+    #[inline]
+    pub(crate) fn is_optional(&self) -> bool {
+        match self {
+            Ty::Primitive { optional, .. } => *optional,
+            Ty::Other { optional, .. } => *optional,
+        }
+    }
+
+    #[inline]
+    pub(crate) fn is_primitive(&self) -> bool {
+        matches!(self, Ty::Primitive { .. })
     }
 
     // TODO handle enumeration case via attrs
@@ -109,15 +119,6 @@ impl Ty {
             ),
         }
     }
-
-    #[inline]
-    pub(crate) fn is_optional(&self) -> bool {
-        match self {
-            Ty::Primitive { optional, .. } => *optional,
-            Ty::Enumeration { optional, .. } => *optional,
-            Ty::Other { optional, .. } => *optional,
-        }
-    }
 }
 
 pub(crate) struct StructField {
@@ -167,17 +168,24 @@ impl StructField {
 
         let field_getter = quote::format_ident!("{}", self.name);
         let proto_field_setter = quote::format_ident!("set_{}", proto_field_name);
+
+        let to_proto_method = if self.ty.is_primitive() {
+            quote! { ProtoConvertPrimitive::to_primitive }
+        } else {
+            quote! { ProtoConvert::to_proto }
+        };
+
         if self.ty.is_optional() {
             // Optional field setter
             quote! {
                 if let Some(value) = &self.#field_getter {
-                    proto.#proto_field_setter(ProtoConvert::to_proto(value).into());
+                    proto.#proto_field_setter(#to_proto_method(value).into());
                 }
             }
         } else {
             // Non optional field just a setter
             quote! {
-                proto.#proto_field_setter(ProtoConvert::to_proto(&self.#field_getter).into());
+                proto.#proto_field_setter(#to_proto_method(&self.#field_getter).into());
             }
         }
     }
@@ -195,13 +203,36 @@ impl StructField {
             return quote! { #struct_field: Default::default(), };
         }
 
+        let from_proto_method = if self.ty.is_primitive() {
+            quote! { ProtoConvertPrimitive::from_primitive }
+        } else {
+            quote! { ProtoConvert::from_proto }
+        };
+
         if self.ty.is_optional() {
+            // Determine the appropriate has value method
+            let has_value_check = match self.ty {
+                Ty::Primitive {
+                    ty: PrimitiveTy::Enumeration,
+                    ..
+                } => quote! {
+                    ProtoPrimitive::has_value(&value.value())
+                },
+                Ty::Primitive { .. } => quote! {
+                    ProtoPrimitive::has_value(&value)
+                },
+                Ty::Other { .. } => {
+                    let has_field = format_ident!("has_{}", struct_field);
+                    quote! { proto.#has_field() }
+                }
+            };
+
             // In case of optional check value is empty via `ProtoPrimitiveValue::has_value(..)`
             quote! {
                 #struct_field: {
                     let value = proto.#proto_field_getter().to_owned();
-                    if ProtoPrimitiveValue::has_value(&value) {
-                        Some(ProtoConvert::from_proto(value)?)
+                    if #has_value_check {
+                        Some(#from_proto_method(value)?)
                     } else {
                         None
                     }
@@ -210,7 +241,7 @@ impl StructField {
         } else {
             // Non optional field just a setter
             quote! {
-                #struct_field: ProtoConvert::from_proto(proto.#proto_field_getter().to_owned())?,
+                #struct_field: #from_proto_method(proto.#proto_field_getter().to_owned())?,
             }
         }
     }

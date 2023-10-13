@@ -1,29 +1,66 @@
-////TODO see https://rust-lang.github.io/api-guidelines/future-proofing.html#c-sealed for sealed trait
-pub trait ProtoPrimitiveValue: Sized {
+pub trait ProtoPrimitive: Sized + private::Sealed {
     fn has_value(&self) -> bool;
 }
-impl ProtoPrimitiveValue for u32 {
+
+mod private {
+    // see https://rust-lang.github.io/api-guidelines/future-proofing.html#c-sealed for sealed trait
+    pub trait Sealed {}
+    impl Sealed for u32 {}
+    impl Sealed for i32 {}
+    impl Sealed for u64 {}
+    impl Sealed for i64 {}
+    impl Sealed for f64 {}
+    impl Sealed for f32 {}
+    impl Sealed for bool {}
+    impl Sealed for String {}
+    impl Sealed for Vec<u8> {}
+}
+impl ProtoPrimitive for u32 {
     fn has_value(&self) -> bool {
         *self != 0
     }
 }
 
-impl ProtoPrimitiveValue for i32 {
+impl ProtoPrimitive for i32 {
     fn has_value(&self) -> bool {
         *self != 0
     }
 }
 
-impl ProtoPrimitiveValue for bool {
+impl ProtoPrimitive for bool {
     fn has_value(&self) -> bool {
         *self
     }
 }
 
-impl ProtoPrimitiveValue for String {
+impl ProtoPrimitive for String {
     fn has_value(&self) -> bool {
         !self.is_empty()
     }
+}
+
+impl ProtoPrimitive for Vec<u8> {
+    fn has_value(&self) -> bool {
+        !self.is_empty()
+    }
+}
+
+impl ProtoPrimitive for f32 {
+    fn has_value(&self) -> bool {
+        *self != 0f32
+    }
+}
+
+impl ProtoPrimitive for f64 {
+    fn has_value(&self) -> bool {
+        *self != 0f64
+    }
+}
+
+trait ProtoConvertPrimitive<P: ProtoPrimitive>: Sized {
+    fn to_primitive(&self) -> P;
+
+    fn from_primitive(proto: P) -> Result<Self, anyhow::Error>;
 }
 
 pub trait ProtoConvert: Sized {
