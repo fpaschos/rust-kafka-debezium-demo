@@ -210,7 +210,6 @@ fn parse_struct_field_attributes_test() {
             c: bool,
             #[proto_convert(enumeration)]
             d: Option<Whatever>
-
         }
     };
 

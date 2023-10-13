@@ -162,7 +162,7 @@ impl StructField {
             return quote! {};
         }
 
-        // TODO extract final proto name field name
+        // TODO extract final proto field name from attrs
         let proto_field_name = &self.name;
 
         let field_getter = quote::format_ident!("{}", self.name);
@@ -184,13 +184,35 @@ impl StructField {
 
     // TODO use struct attrs for rename_all
     pub(crate) fn implement_setter(&self, _struct_attrs: &StructAttrs) -> TokenStream {
+        let struct_field = format_ident!("{}", self.name);
+
+        // TODO extract final proto field name from attrs
+        let proto_field_getter = struct_field.clone(); // Here proto and struct field are the same
+
         // Fast fail skip attribute
         if let Some(FieldAttrs { skip: true, .. }) = &self.attrs {
             // Default struct setter for the skipped fields.
-            return quote! { Default::default() };
+            return quote! { #struct_field: Default::default(), };
         }
 
-        quote! {}
+        if self.ty.is_optional() {
+            // In case of optional check value is empty via `ProtoPrimitiveValue::has_value(..)`
+            quote! {
+                #struct_field: {
+                    let value = proto.#proto_field_getter().to_owned();
+                    if ProtoPrimitiveValue::has_value(&value) {
+                        Some(ProtoConvert::from_proto(value)?)
+                    } else {
+                        None
+                    }
+                },
+            }
+        } else {
+            // Non optional field just a setter
+            quote! {
+                #struct_field: ProtoConvert::from_proto(proto.#proto_field_getter().to_owned())?,
+            }
+        }
     }
 }
 

@@ -35,16 +35,22 @@ fn implement_struct_primitives_test() {
 
             fn from_proto(proto: proto::Test) -> std::result::Result<Self, anyhow::Error> {
                 let inner = Self {
-
+                    id: ProtoConvert::from_proto(proto.id().to_owned())?,
+                    valid: ProtoConvert::from_proto(proto.valid().to_owned())?,
+                    opt_name: {
+                        let value = proto.opt_name().to_owned();
+                        if ProtoPrimitiveValue::has_value(&value) {
+                            Some(ProtoConvert::from_proto(value)?)
+                        } else {
+                            None
+                        }
+                    },
                 };
                 Ok(inner)
             }
         }
     };
 
-    let implemented = s.implement_proto_convert();
-
-    assert_tokens_eq(&expected, &implemented);
-
-    // std::stringify!(implemented);
+    let actual = s.implement_proto_convert();
+    assert_tokens_eq(&expected, &actual);
 }
