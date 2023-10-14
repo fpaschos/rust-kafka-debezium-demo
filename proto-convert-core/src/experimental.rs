@@ -20,7 +20,7 @@ pub(crate) enum PrimitiveTy {
     Enumeration,
 }
 
-fn maybe_known_primitive_type(ident: &Ident) -> Option<PrimitiveTy> {
+pub(crate) fn maybe_known_proto_primitive(ident: &Ident) -> Option<PrimitiveTy> {
     match ident {
         _ if ident == "u32" => Some(PrimitiveTy::U32),
         _ if ident == "i32" => Some(PrimitiveTy::I32),
@@ -70,7 +70,7 @@ impl Ty {
                 return match &last_segment.arguments {
                     PathArguments::None => {
                         // Check only for primitive types or any other type
-                        if let Some(ty) = maybe_known_primitive_type(&last_segment.ident) {
+                        if let Some(ty) = maybe_known_proto_primitive(&last_segment.ident) {
                             Ok(Ty::primitive(ty, false))
                         } else {
                             Ok(Ty::other(path.clone(), false))
@@ -87,7 +87,7 @@ impl Ty {
                             if let GenericArgument::Type(Type::Path(t)) = gen {
                                 let last_segment = t.path.segments.last().unwrap(); // TODO what if there is no last segment
                                                                                     // Check only for primitive types or any other type
-                                if let Some(ty) = maybe_known_primitive_type(&last_segment.ident) {
+                                if let Some(ty) = maybe_known_proto_primitive(&last_segment.ident) {
                                     Ok(Ty::primitive(ty, true))
                                 } else {
                                     Ok(Ty::other(path.clone(), true))
