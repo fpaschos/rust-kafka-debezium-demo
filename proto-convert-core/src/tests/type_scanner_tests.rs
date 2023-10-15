@@ -1,7 +1,8 @@
+use crate::experimental::{PrimitiveTy, Ty};
 use proc_macro2::Ident;
 use std::default::Default;
 use syn::fold::Fold;
-use syn::{parse_quote, Path, PathArguments, Type, TypePath};
+use syn::{parse_quote, Path, PathArguments};
 
 #[derive(Debug, Clone)]
 enum NestedType {
@@ -38,7 +39,7 @@ impl NestedType {
     }
 
     #[inline]
-    fn args(&self) -> &Vec<Box<NestedType>> {
+    pub fn args(&self) -> &Vec<Box<NestedType>> {
         match self {
             NestedType::Named { args, .. } => args,
             NestedType::Unnamed { args, .. } => args,
@@ -57,9 +58,15 @@ impl NestedType {
     fn nest(&mut self, other: NestedType) {
         self.args_mut().push(Box::new(other));
     }
+
+    pub(crate) fn is_named<S: AsRef<str>>(&self, n: S) -> bool {
+        match self {
+            NestedType::Named { name, .. } => *name == n.as_ref(),
+            NestedType::Unnamed { .. } => false,
+        }
+    }
 }
 
-// TODO mark as #[cfg(test)] used only for test purposes
 impl ToString for NestedType {
     fn to_string(&self) -> String {
         let mut res = String::new();
@@ -90,6 +97,35 @@ impl ToString for NestedType {
     }
 }
 
+impl From<&NestedType> for Ty {
+    fn from(value: &NestedType) -> Self {
+        // TODO how do I traverse NestedType efficiently???
+        let value = value.to_string();
+        match value.to_string() {
+            _ if value == "bool" => Self::primitive(PrimitiveTy::Bool, false),
+            _ if value == "String" => Self::primitive(PrimitiveTy::String, false),
+            _ if value == "u32" => Self::primitive(PrimitiveTy::U32, false),
+            _ if value == "i32" => Self::primitive(PrimitiveTy::I32, false),
+            _ if value == "f32" => Self::primitive(PrimitiveTy::F32, false),
+            _ if value == "f64" => Self::primitive(PrimitiveTy::F64, false),
+            _ if value == "u64" => Self::primitive(PrimitiveTy::U64, false),
+            _ if value == "i64" => Self::primitive(PrimitiveTy::I64, false),
+            _ if value == "Vec<u8>" => Self::primitive(PrimitiveTy::VecBytes, false),
+            _ if value == "Option<bool>" => Self::primitive(PrimitiveTy::Bool, true),
+            _ if value == "Option<String>" => Self::primitive(PrimitiveTy::String, true),
+            _ if value == "Option<u32>" => Self::primitive(PrimitiveTy::U32, true),
+            _ if value == "Option<i32>" => Self::primitive(PrimitiveTy::I32, true),
+            _ if value == "Option<f32>" => Self::primitive(PrimitiveTy::F32, true),
+            _ if value == "Option<f64>" => Self::primitive(PrimitiveTy::F64, true),
+            _ if value == "Option<u64>" => Self::primitive(PrimitiveTy::U64, true),
+            _ if value == "Option<i64>" => Self::primitive(PrimitiveTy::I64, true),
+            _ if value == "Option<Vec<u8>>" => Self::primitive(PrimitiveTy::VecBytes, true),
+            _ if value.starts_with("Option<") => Self::other(true),
+            _ => Self::other(false),
+        }
+    }
+}
+
 #[derive(Debug, Default, Clone)]
 struct TypeScanner {
     stack: Vec<NestedType>,
@@ -97,6 +133,7 @@ struct TypeScanner {
 
 impl TypeScanner {
     fn scan(&mut self, p: Path) -> NestedType {
+        self.stack.clear();
         self.fold_path(p);
         debug_assert_eq!(
             self.stack.len(),
@@ -133,12 +170,12 @@ impl TypeScanner {
 }
 
 impl Fold for TypeScanner {
-    // fn fold_type_path(&mut self, i: TypePath) -> TypePath {
-    //     todo!()
+    // TODO try to fold more generic types
+    // fn fold_type_path(&mut self, ty: TypePath) -> TypePath {
+    //     match
     // }
     //
     // fn fold_type(&mut self, i: Type) -> Type {
-    //     todo!()
     // }
     fn fold_path(&mut self, p: Path) -> Path {
         let last = p.segments.last().map(|s| &s.ident);
@@ -167,11 +204,12 @@ impl Fold for TypeScanner {
 }
 #[test]
 fn test_fold_type() {
+    let mut scanner = TypeScanner::default();
+
     let fragment: Path = parse_quote! {
       HashMap<u8,u8>
     };
 
-    let mut scanner = TypeScanner::default();
     let res = scanner.scan(fragment);
     assert_eq!(res.to_string(), "HashMap<u8,u8>".to_string());
 
@@ -179,7 +217,6 @@ fn test_fold_type() {
       std::string::Option<u8>
     };
 
-    let mut scanner = TypeScanner::default();
     let res = scanner.scan(fragment);
     assert_eq!(res.to_string(), "Option<u8>".to_string());
 
@@ -187,7 +224,6 @@ fn test_fold_type() {
       std::string::Option<Vec<u8>>
     };
 
-    let mut scanner = TypeScanner::default();
     let res = scanner.scan(fragment);
     assert_eq!(res.to_string(), "Option<Vec<u8>>".to_string());
 
@@ -195,7 +231,6 @@ fn test_fold_type() {
       std::collections::HashMap<u8,Vec<u8>>
     };
 
-    let mut scanner = TypeScanner::default();
     let res = scanner.scan(fragment);
     assert_eq!(res.to_string(), "HashMap<u8,Vec<u8>>".to_string());
 
@@ -203,7 +238,6 @@ fn test_fold_type() {
       Triple<u8,u8, Option<Vec<u8>>>
     };
 
-    let mut scanner = TypeScanner::default();
     let res = scanner.scan(fragment);
     assert_eq!(res.to_string(), "Triple<u8,u8,Option<Vec<u8>>>".to_string());
 }

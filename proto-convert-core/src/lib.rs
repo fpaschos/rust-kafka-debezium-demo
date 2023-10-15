@@ -9,6 +9,7 @@ mod proto_convert_struct;
 
 #[cfg(test)]
 mod tests;
+mod types;
 
 const CONVERT_ATTRIBUTE: &str = "proto_convert";
 const SNAKE_CASE_ATTRIBUTE_VALUE: &str = "snake_case";

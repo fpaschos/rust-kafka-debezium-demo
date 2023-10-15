@@ -15,12 +15,12 @@ pub(crate) enum PrimitiveTy {
     I64,
     Bool,
     String,
-    VecBytes, // TODO how to handle this?
+    VecBytes,
     // Special case for enumerations fall back to u32
     Enumeration,
 }
 
-pub(crate) fn maybe_known_proto_primitive(ident: &Ident) -> Option<PrimitiveTy> {
+pub(crate) fn to_known_proto_primitive(ident: &Ident) -> Option<PrimitiveTy> {
     match ident {
         _ if ident == "u32" => Some(PrimitiveTy::U32),
         _ if ident == "i32" => Some(PrimitiveTy::I32),
@@ -37,7 +37,7 @@ pub(crate) fn maybe_known_proto_primitive(ident: &Ident) -> Option<PrimitiveTy> 
 #[derive(Debug, PartialEq)]
 pub(crate) enum Ty {
     Primitive { ty: PrimitiveTy, optional: bool },
-    Other { ty: Path, optional: bool },
+    Other { optional: bool },
 }
 
 impl Ty {
@@ -45,8 +45,8 @@ impl Ty {
         Self::Primitive { ty, optional }
     }
 
-    pub(crate) fn other(ty: Path, optional: bool) -> Self {
-        Self::Other { ty, optional }
+    pub(crate) fn other(optional: bool) -> Self {
+        Self::Other { optional }
     }
 
     #[inline]
@@ -70,16 +70,16 @@ impl Ty {
                 return match &last_segment.arguments {
                     PathArguments::None => {
                         // Check only for primitive types or any other type
-                        if let Some(ty) = maybe_known_proto_primitive(&last_segment.ident) {
+                        if let Some(ty) = to_known_proto_primitive(&last_segment.ident) {
                             Ok(Ty::primitive(ty, false))
                         } else {
-                            Ok(Ty::other(path.clone(), false))
+                            Ok(Ty::other(false))
                         }
                     }
                     PathArguments::AngleBracketed(args) => {
                         if args.args.iter().count() > 1 {
                             // Types with more than one generic argument are classified as other
-                            Ok(Ty::other(path.clone(), false))
+                            Ok(Ty::other(false))
                         } else if last_segment.ident == "Option" {
                             // Type is option check the inner type
                             let gen = args.args.iter().next().unwrap();
@@ -87,10 +87,10 @@ impl Ty {
                             if let GenericArgument::Type(Type::Path(t)) = gen {
                                 let last_segment = t.path.segments.last().unwrap(); // TODO what if there is no last segment
                                                                                     // Check only for primitive types or any other type
-                                if let Some(ty) = maybe_known_proto_primitive(&last_segment.ident) {
+                                if let Some(ty) = to_known_proto_primitive(&last_segment.ident) {
                                     Ok(Ty::primitive(ty, true))
                                 } else {
-                                    Ok(Ty::other(path.clone(), true))
+                                    Ok(Ty::other(true))
                                 }
                             } else {
                                 Err(
@@ -101,7 +101,7 @@ impl Ty {
                             }
                         } else {
                             // The type is not Option return it as other non optional
-                            Ok(Ty::other(path.clone(), false))
+                            Ok(Ty::other(false))
                         }
                     }
 
