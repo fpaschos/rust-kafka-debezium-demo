@@ -1,4 +1,4 @@
-use proto_convert::{ProtoConvert, ProtoConvertPrimitive, ProtoPrimitive};
+use proto_convert::{ProtoConvert, ProtoConvertScalar, ProtoScalar};
 use protobuf::Enum;
 use uuid::Uuid;
 
@@ -45,20 +45,20 @@ impl ProtoConvert for Entity {
     type ProtoStruct = proto::Entity;
     fn to_proto(&self) -> Self::ProtoStruct {
         let mut proto = proto::Entity::default();
-        proto.set_id(ProtoConvertPrimitive::to_primitive(&self.id));
-        proto.set_nonce(ProtoConvertPrimitive::to_primitive(&self.nonce));
-        proto.set_valid(ProtoConvertPrimitive::to_primitive(&self.valid));
-        proto.set_name(ProtoConvertPrimitive::to_primitive(&self.name));
+        proto.set_id(ProtoConvertScalar::to_scalar(&self.id));
+        proto.set_nonce(ProtoConvertScalar::to_scalar(&self.nonce));
+        proto.set_valid(ProtoConvertScalar::to_scalar(&self.valid));
+        proto.set_name(ProtoConvertScalar::to_scalar(&self.name));
         // Special case for enum
         proto.set_status(ProtoConvert::to_proto(&self.status));
         proto
     }
     fn from_proto(proto: Self::ProtoStruct) -> Result<Self, anyhow::Error> {
         let inner = Self {
-            id: ProtoConvertPrimitive::from_primitive(proto.id().to_owned())?,
-            nonce: ProtoConvertPrimitive::from_primitive(proto.nonce().to_owned())?,
-            valid: ProtoConvertPrimitive::from_primitive(proto.valid().to_owned())?,
-            name: ProtoConvertPrimitive::from_primitive(proto.name().to_owned())?,
+            id: ProtoConvertScalar::from_scalar(proto.id().to_owned())?,
+            nonce: ProtoConvertScalar::from_scalar(proto.nonce().to_owned())?,
+            valid: ProtoConvertScalar::from_scalar(proto.valid().to_owned())?,
+            name: ProtoConvertScalar::from_scalar(proto.name().to_owned())?,
             // Special case for enum
             status: ProtoConvert::from_proto(proto.status().to_owned())?,
         };
@@ -83,27 +83,27 @@ impl ProtoConvert for EntityWithOptionals {
     type ProtoStruct = proto::EntityWithOptionals;
     fn to_proto(&self) -> Self::ProtoStruct {
         let mut proto = proto::EntityWithOptionals::default();
-        proto.set_id(ProtoConvertPrimitive::to_primitive(&self.id));
-        proto.set_nonce(ProtoConvertPrimitive::to_primitive(&self.nonce));
-        proto.set_valid(ProtoConvertPrimitive::to_primitive(&self.valid));
-        proto.set_name(ProtoConvertPrimitive::to_primitive(&self.name));
+        proto.set_id(ProtoConvertScalar::to_scalar(&self.id));
+        proto.set_nonce(ProtoConvertScalar::to_scalar(&self.nonce));
+        proto.set_valid(ProtoConvertScalar::to_scalar(&self.valid));
+        proto.set_name(ProtoConvertScalar::to_scalar(&self.name));
 
         // Only if there is value other default
         if let Some(value) = &self.opt_id {
-            proto.set_opt_id(ProtoConvertPrimitive::to_primitive(value));
+            proto.set_opt_id(ProtoConvertScalar::to_scalar(value));
         }
 
         // Only if there is value other default
         if let Some(value) = &self.opt_nonce {
-            proto.set_opt_nonce(ProtoConvertPrimitive::to_primitive(value));
+            proto.set_opt_nonce(ProtoConvertScalar::to_scalar(value));
         }
 
         if let Some(value) = &self.opt_valid {
-            proto.set_opt_valid(ProtoConvertPrimitive::to_primitive(value));
+            proto.set_opt_valid(ProtoConvertScalar::to_scalar(value));
         }
 
         if let Some(value) = &self.opt_name {
-            proto.set_opt_name(ProtoConvertPrimitive::to_primitive(value));
+            proto.set_opt_name(ProtoConvertScalar::to_scalar(value));
         }
 
         if let Some(value) = &self.opt_status {
@@ -113,39 +113,39 @@ impl ProtoConvert for EntityWithOptionals {
     }
     fn from_proto(proto: Self::ProtoStruct) -> Result<Self, anyhow::Error> {
         let inner = Self {
-            id: ProtoConvertPrimitive::from_primitive(proto.id().to_owned())?,
-            nonce: ProtoConvertPrimitive::from_primitive(proto.nonce().to_owned())?,
-            valid: ProtoConvertPrimitive::from_primitive(proto.valid().to_owned())?,
-            name: ProtoConvertPrimitive::from_primitive(proto.name().to_owned())?,
+            id: ProtoConvertScalar::from_scalar(proto.id().to_owned())?,
+            nonce: ProtoConvertScalar::from_scalar(proto.nonce().to_owned())?,
+            valid: ProtoConvertScalar::from_scalar(proto.valid().to_owned())?,
+            name: ProtoConvertScalar::from_scalar(proto.name().to_owned())?,
             // Special case for options
             opt_id: {
                 let v = proto.opt_id().to_owned();
-                if ProtoPrimitive::has_value(&v) {
-                    Some(ProtoConvertPrimitive::from_primitive(v)?)
+                if ProtoScalar::has_value(&v) {
+                    Some(ProtoConvertScalar::from_scalar(v)?)
                 } else {
                     None
                 }
             },
             opt_nonce: {
                 let v = proto.opt_nonce().to_owned();
-                if ProtoPrimitive::has_value(&v) {
-                    Some(ProtoConvertPrimitive::from_primitive(v)?)
+                if ProtoScalar::has_value(&v) {
+                    Some(ProtoConvertScalar::from_scalar(v)?)
                 } else {
                     None
                 }
             },
             opt_valid: {
                 let v = proto.opt_valid().to_owned();
-                if ProtoPrimitive::has_value(&v) {
-                    Some(ProtoConvertPrimitive::from_primitive(v)?)
+                if ProtoScalar::has_value(&v) {
+                    Some(ProtoConvertScalar::from_scalar(v)?)
                 } else {
                     None
                 }
             },
             opt_name: {
                 let v = proto.opt_name().to_owned();
-                if ProtoPrimitive::has_value(&v) {
-                    Some(ProtoConvertPrimitive::from_primitive(v)?)
+                if ProtoScalar::has_value(&v) {
+                    Some(ProtoConvertScalar::from_scalar(v)?)
                 } else {
                     None
                 }
@@ -154,7 +154,7 @@ impl ProtoConvert for EntityWithOptionals {
             opt_status: {
                 let v = proto.opt_status().to_owned();
                 // convert enum value to i32 in order to check ProtoPrimitive value
-                if ProtoPrimitive::has_value(&v.value()) {
+                if ProtoScalar::has_value(&v.value()) {
                     Some(ProtoConvert::from_proto(v)?)
                 } else {
                     None
@@ -179,22 +179,22 @@ impl ProtoConvert for EntityUuids {
     type ProtoStruct = proto::EntityUuids;
     fn to_proto(&self) -> Self::ProtoStruct {
         let mut proto = proto::EntityUuids::default();
-        proto.set_uuid_str(ProtoConvertPrimitive::to_primitive(&self.uuid_str));
+        proto.set_uuid_str(ProtoConvertScalar::to_scalar(&self.uuid_str));
 
         // Only if there is value other default
         if let Some(value) = &self.opt_uuid_str {
-            proto.set_opt_uuid_str(ProtoConvertPrimitive::to_primitive(value));
+            proto.set_opt_uuid_str(ProtoConvertScalar::to_scalar(value));
         }
 
         proto
     }
     fn from_proto(proto: Self::ProtoStruct) -> Result<Self, anyhow::Error> {
         let inner = Self {
-            uuid_str: ProtoConvertPrimitive::from_primitive(proto.uuid_str().to_owned())?,
+            uuid_str: ProtoConvertScalar::from_scalar(proto.uuid_str().to_owned())?,
             opt_uuid_str: {
                 let v = proto.opt_uuid_str().to_owned();
-                if ProtoPrimitive::has_value(&v) {
-                    Some(ProtoConvertPrimitive::from_primitive(v)?)
+                if ProtoScalar::has_value(&v) {
+                    Some(ProtoConvertScalar::from_scalar(v)?)
                 } else {
                     None
                 }

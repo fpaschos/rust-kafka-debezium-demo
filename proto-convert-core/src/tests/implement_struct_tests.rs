@@ -3,7 +3,7 @@ use quote::quote;
 use syn::DeriveInput;
 
 #[test]
-fn implement_struct_primitives_test() {
+fn implement_struct_scalar_types_test() {
     let fragment = quote! {
         #[proto_convert(source = "proto::Test")]
         struct Test {
@@ -23,11 +23,11 @@ fn implement_struct_primitives_test() {
             fn to_proto(&self) -> Self::ProtoStruct {
                 let mut proto = proto::Test::default();
 
-                proto.set_id(ProtoConvertPrimitive::to_primitive(&self.id).into());
-                proto.set_valid(ProtoConvertPrimitive::to_primitive(&self.valid).into());
+                proto.set_id(ProtoConvertScalar::to_scalar(&self.id).into());
+                proto.set_valid(ProtoConvertScalar::to_scalar(&self.valid).into());
 
                 if let Some(value) = &self.opt_name {
-                    proto.set_opt_name(ProtoConvertPrimitive::to_primitive(value).into());
+                    proto.set_opt_name(ProtoConvertScalar::to_scalar(value).into());
                 }
 
                 proto
@@ -35,12 +35,12 @@ fn implement_struct_primitives_test() {
 
             fn from_proto(proto: Self::ProtoStruct) -> std::result::Result<Self, anyhow::Error> {
                 let inner = Self {
-                    id: ProtoConvertPrimitive::from_primitive(proto.id().to_owned())?,
-                    valid: ProtoConvertPrimitive::from_primitive(proto.valid().to_owned())?,
+                    id: ProtoConvertScalar::from_scalar(proto.id().to_owned())?,
+                    valid: ProtoConvertScalar::from_scalar(proto.valid().to_owned())?,
                     opt_name: {
                         let value = proto.opt_name().to_owned();
-                        if ProtoPrimitive::has_value(&value) {
-                            Some(ProtoConvertPrimitive::from_primitive(value)?)
+                        if ProtoScalar::has_value(&value) {
+                            Some(ProtoConvertScalar::from_scalar(value)?)
                         } else {
                             None
                         }
@@ -56,7 +56,7 @@ fn implement_struct_primitives_test() {
 }
 
 #[test]
-fn implement_struct_non_primitives_test() {
+fn implement_struct_non_scalar_types_test() {
     let fragment = quote! {
         #[proto_convert(source = "proto::Test")]
         struct Test {
@@ -112,7 +112,10 @@ fn implement_struct_rename_attributes_test() {
         struct Test {
             #[proto_convert(rename = "type_")]
             r#type: Entity,
-            // opt_entity: Option<Entity>,
+            #[proto_convert(rename = "other_name")]
+            opt_entity: Option<Entity>,
+            // #[proto_convert(rename = "scalar_renamed")]
+            // scalar: u32,
         }
     };
 
@@ -128,8 +131,12 @@ fn implement_struct_rename_attributes_test() {
 
                 proto.set_type(ProtoConvert::to_proto(&self.r#type).into());
 
-                // if let Some(value) = &self.opt_entity {
-                //     proto.set_opt_entity(ProtoConvert::to_proto(value).into());
+                if let Some(value) = &self.opt_entity {
+                    proto.set_other_name(ProtoConvert::to_proto(value).into());
+                }
+
+                // if let Some(value) = &self.scalar {
+                //     proto.set_scalar_renamed(ProtoConvertScalar::to_scalar(value).into());
                 // }
 
                 proto
@@ -138,14 +145,15 @@ fn implement_struct_rename_attributes_test() {
             fn from_proto(proto: Self::ProtoStruct) -> std::result::Result<Self, anyhow::Error> {
                 let inner = Self {
                     r#type: ProtoConvert::from_proto(proto.type_().to_owned())?,
-                    // opt_entity: {
-                    //     let value = proto.opt_entity().to_owned();
-                    //     if proto.has_opt_entity() {
-                    //         Some(ProtoConvert::from_proto(value)?)
-                    //     } else {
-                    //         None
-                    //     }
-                    // },
+                    opt_entity: {
+                        let value = proto.other_name().to_owned();
+                        if proto.has_other_name() {
+                            Some(ProtoConvert::from_proto(value)?)
+                        } else {
+                            None
+                        }
+                    },
+                    // scalar: ProtoConvertScalar::from_scalar(proto.scalar_renamed().to_owned())?,
                 };
                 Ok(inner)
             }

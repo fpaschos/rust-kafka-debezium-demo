@@ -2,7 +2,7 @@ use crate::types::{NestedType, TypeScanner};
 use syn::Type;
 
 #[derive(Debug, Copy, Clone, PartialEq)]
-pub(crate) enum PrimitiveTy {
+pub(crate) enum ScalarTy {
     F32,
     F64,
     U32,
@@ -18,13 +18,13 @@ pub(crate) enum PrimitiveTy {
 
 #[derive(Debug, PartialEq)]
 pub(crate) enum Ty {
-    Primitive { ty: PrimitiveTy, optional: bool },
+    Scalar { ty: ScalarTy, optional: bool },
     Other { optional: bool },
 }
 
 impl Ty {
-    pub(crate) fn primitive(ty: PrimitiveTy, optional: bool) -> Self {
-        Self::Primitive { ty, optional }
+    pub(crate) fn scalar(ty: ScalarTy, optional: bool) -> Self {
+        Self::Scalar { ty, optional }
     }
 
     pub(crate) fn other(optional: bool) -> Self {
@@ -34,14 +34,14 @@ impl Ty {
     #[inline]
     pub(crate) fn is_optional(&self) -> bool {
         match self {
-            Ty::Primitive { optional, .. } => *optional,
+            Ty::Scalar { optional, .. } => *optional,
             Ty::Other { optional, .. } => *optional,
         }
     }
 
     #[inline]
-    pub(crate) fn is_primitive(&self) -> bool {
-        matches!(self, Ty::Primitive { .. })
+    pub(crate) fn is_scalar(&self) -> bool {
+        matches!(self, Ty::Scalar { .. })
     }
 
     // TODO handle enumeration case via attrs
@@ -65,24 +65,24 @@ impl From<&NestedType> for Ty {
         // TODO how do I traverse NestedType efficiently???
         let value = value.to_string();
         match value.to_string() {
-            _ if value == "bool" => Self::primitive(PrimitiveTy::Bool, false),
-            _ if value == "String" => Self::primitive(PrimitiveTy::String, false),
-            _ if value == "u32" => Self::primitive(PrimitiveTy::U32, false),
-            _ if value == "i32" => Self::primitive(PrimitiveTy::I32, false),
-            _ if value == "f32" => Self::primitive(PrimitiveTy::F32, false),
-            _ if value == "f64" => Self::primitive(PrimitiveTy::F64, false),
-            _ if value == "u64" => Self::primitive(PrimitiveTy::U64, false),
-            _ if value == "i64" => Self::primitive(PrimitiveTy::I64, false),
-            _ if value == "Vec<u8>" => Self::primitive(PrimitiveTy::VecBytes, false),
-            _ if value == "Option<bool>" => Self::primitive(PrimitiveTy::Bool, true),
-            _ if value == "Option<String>" => Self::primitive(PrimitiveTy::String, true),
-            _ if value == "Option<u32>" => Self::primitive(PrimitiveTy::U32, true),
-            _ if value == "Option<i32>" => Self::primitive(PrimitiveTy::I32, true),
-            _ if value == "Option<f32>" => Self::primitive(PrimitiveTy::F32, true),
-            _ if value == "Option<f64>" => Self::primitive(PrimitiveTy::F64, true),
-            _ if value == "Option<u64>" => Self::primitive(PrimitiveTy::U64, true),
-            _ if value == "Option<i64>" => Self::primitive(PrimitiveTy::I64, true),
-            _ if value == "Option<Vec<u8>>" => Self::primitive(PrimitiveTy::VecBytes, true),
+            _ if value == "bool" => Self::scalar(ScalarTy::Bool, false),
+            _ if value == "String" => Self::scalar(ScalarTy::String, false),
+            _ if value == "u32" => Self::scalar(ScalarTy::U32, false),
+            _ if value == "i32" => Self::scalar(ScalarTy::I32, false),
+            _ if value == "f32" => Self::scalar(ScalarTy::F32, false),
+            _ if value == "f64" => Self::scalar(ScalarTy::F64, false),
+            _ if value == "u64" => Self::scalar(ScalarTy::U64, false),
+            _ if value == "i64" => Self::scalar(ScalarTy::I64, false),
+            _ if value == "Vec<u8>" => Self::scalar(ScalarTy::VecBytes, false),
+            _ if value == "Option<bool>" => Self::scalar(ScalarTy::Bool, true),
+            _ if value == "Option<String>" => Self::scalar(ScalarTy::String, true),
+            _ if value == "Option<u32>" => Self::scalar(ScalarTy::U32, true),
+            _ if value == "Option<i32>" => Self::scalar(ScalarTy::I32, true),
+            _ if value == "Option<f32>" => Self::scalar(ScalarTy::F32, true),
+            _ if value == "Option<f64>" => Self::scalar(ScalarTy::F64, true),
+            _ if value == "Option<u64>" => Self::scalar(ScalarTy::U64, true),
+            _ if value == "Option<i64>" => Self::scalar(ScalarTy::I64, true),
+            _ if value == "Option<Vec<u8>>" => Self::scalar(ScalarTy::VecBytes, true),
             _ if value.starts_with("Option<") => Self::other(true),
             _ => Self::other(false),
         }

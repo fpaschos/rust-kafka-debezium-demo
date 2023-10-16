@@ -3,7 +3,7 @@ use quote::quote;
 use syn::{Data, DeriveInput};
 
 use crate::proto_struct::{StructAttrs, StructField};
-use crate::types::{PrimitiveTy, Ty};
+use crate::types::{ScalarTy, Ty};
 
 #[test]
 fn parse_struct_attributes_test() {
@@ -49,7 +49,7 @@ fn parse_struct_primitive_fields_test() {
     let field = StructField::try_from_field(field).unwrap();
 
     assert_eq!(field.name, "a".to_string());
-    assert_eq!(field.ty, Ty::primitive(PrimitiveTy::U32, false));
+    assert_eq!(field.ty, Ty::scalar(ScalarTy::U32, false));
     assert!(field.attrs.is_none());
 
     let field = fields.next().unwrap();
@@ -57,7 +57,7 @@ fn parse_struct_primitive_fields_test() {
     let field = StructField::try_from_field(field).unwrap();
 
     assert_eq!(field.name, "b".to_string());
-    assert_eq!(field.ty, Ty::primitive(PrimitiveTy::I32, false));
+    assert_eq!(field.ty, Ty::scalar(ScalarTy::I32, false));
     assert!(!field.is_optional());
     assert!(field.attrs.is_none());
 
@@ -66,7 +66,7 @@ fn parse_struct_primitive_fields_test() {
     let field = StructField::try_from_field(field).unwrap();
 
     assert_eq!(field.name, "c".to_string());
-    assert_eq!(field.ty, Ty::primitive(PrimitiveTy::Bool, false));
+    assert_eq!(field.ty, Ty::scalar(ScalarTy::Bool, false));
     assert!(!field.is_optional());
     assert!(field.attrs.is_none());
 
@@ -75,7 +75,7 @@ fn parse_struct_primitive_fields_test() {
     let field = StructField::try_from_field(field).unwrap();
 
     assert_eq!(field.name, "d".to_string());
-    assert_eq!(field.ty, Ty::primitive(PrimitiveTy::F32, false));
+    assert_eq!(field.ty, Ty::scalar(ScalarTy::F32, false));
     assert!(field.attrs.is_none());
 
     let field = fields.next().unwrap();
@@ -83,7 +83,7 @@ fn parse_struct_primitive_fields_test() {
     let field = StructField::try_from_field(field).unwrap();
 
     assert_eq!(field.name, "e".to_string());
-    assert_eq!(field.ty, Ty::primitive(PrimitiveTy::F64, false));
+    assert_eq!(field.ty, Ty::scalar(ScalarTy::F64, false));
     assert!(field.attrs.is_none());
 
     let field = fields.next().unwrap();
@@ -91,7 +91,7 @@ fn parse_struct_primitive_fields_test() {
     let field = StructField::try_from_field(field).unwrap();
 
     assert_eq!(field.name, "f".to_string());
-    assert_eq!(field.ty, Ty::primitive(PrimitiveTy::U64, false));
+    assert_eq!(field.ty, Ty::scalar(ScalarTy::U64, false));
     assert!(!field.is_optional());
     assert!(field.attrs.is_none());
 
@@ -100,7 +100,7 @@ fn parse_struct_primitive_fields_test() {
     let field = StructField::try_from_field(field).unwrap();
 
     assert_eq!(field.name, "g".to_string());
-    assert_eq!(field.ty, Ty::primitive(PrimitiveTy::I64, false));
+    assert_eq!(field.ty, Ty::scalar(ScalarTy::I64, false));
     assert!(!field.is_optional());
     assert!(field.attrs.is_none());
 
@@ -109,7 +109,7 @@ fn parse_struct_primitive_fields_test() {
     let field = StructField::try_from_field(field).unwrap();
 
     assert_eq!(field.name, "h".to_string());
-    assert_eq!(field.ty, Ty::primitive(PrimitiveTy::String, false));
+    assert_eq!(field.ty, Ty::scalar(ScalarTy::String, false));
     assert!(!field.is_optional());
     assert!(field.attrs.is_none());
 }
@@ -139,7 +139,7 @@ fn parse_nested_types_test() {
 
     let field = StructField::try_from_field(field).unwrap();
     assert_eq!(field.name, "opt_id".to_string());
-    assert_eq!(field.ty, Ty::primitive(PrimitiveTy::U32, true));
+    assert_eq!(field.ty, Ty::scalar(ScalarTy::U32, true));
     assert!(field.attrs.is_none());
 
     let field = fields.next().unwrap();

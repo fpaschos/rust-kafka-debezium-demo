@@ -1,5 +1,5 @@
 use anyhow::Error;
-use proto_convert::{derive::ProtoConvert, ProtoConvert, ProtoConvertPrimitive};
+use proto_convert::{derive::ProtoConvert, ProtoConvert, ProtoConvertScalar};
 
 mod proto;
 #[derive(Debug, Clone, ProtoConvert, PartialEq)]

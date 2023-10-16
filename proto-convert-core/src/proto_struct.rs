@@ -1,9 +1,9 @@
 use darling::FromMeta;
 use proc_macro2::{Ident, TokenStream};
-use quote::{format_ident, quote, ToTokens};
+use quote::{format_ident, quote};
 use syn::{Attribute, DataStruct, Path};
 
-use crate::types::{PrimitiveTy, Ty};
+use crate::types::{ScalarTy, Ty};
 use crate::{find_proto_convert_meta, get_proto_field_name};
 
 pub(crate) struct StructField {
@@ -62,8 +62,8 @@ impl StructField {
 
         let struct_field = &self.name;
 
-        let to_proto_method = if self.ty.is_primitive() {
-            quote! { ProtoConvertPrimitive::to_primitive }
+        let to_proto_method = if self.ty.is_scalar() {
+            quote! { ProtoConvertScalar::to_scalar }
         } else {
             quote! { ProtoConvert::to_proto }
         };
@@ -94,7 +94,7 @@ impl StructField {
         }
 
         //Check field rename
-        let proto_field_getter = if let Some(FieldAttrs {
+        let proto_field = if let Some(FieldAttrs {
             rename: Some(new_name),
             ..
         }) = &self.attrs
@@ -105,26 +105,28 @@ impl StructField {
             struct_field.clone() // Here proto and struct field are the same
         };
 
-        let from_proto_method = if self.ty.is_primitive() {
-            quote! { ProtoConvertPrimitive::from_primitive }
+        let from_proto_method = if self.ty.is_scalar() {
+            quote! { ProtoConvertScalar::from_scalar }
         } else {
             quote! { ProtoConvert::from_proto }
         };
 
+        let proto_field_getter = format_ident!("{}", proto_field);
+
         if self.ty.is_optional() {
-            // Determine the appropriate has value method
+            // Determine the appropriate has_value method
             let has_value_check = match self.ty {
-                Ty::Primitive {
-                    ty: PrimitiveTy::Enumeration,
+                Ty::Scalar {
+                    ty: ScalarTy::Enumeration,
                     ..
                 } => quote! {
-                    ProtoPrimitive::has_value(&value.value())
+                    ProtoScalar::has_value(&value.value())
                 },
-                Ty::Primitive { .. } => quote! {
-                    ProtoPrimitive::has_value(&value)
+                Ty::Scalar { .. } => quote! {
+                    ProtoScalar::has_value(&value)
                 },
                 Ty::Other { .. } => {
-                    let has_field = format_ident!("has_{}", struct_field);
+                    let has_field = format_ident!("has_{}", proto_field);
                     quote! { proto.#has_field() }
                 }
             };
@@ -216,13 +218,6 @@ impl Struct {
                 }
             }
         }
-    }
-}
-
-impl ToTokens for Struct {
-    fn to_tokens(&self, tokens: &mut TokenStream) {
-        let expanded = self.implement_proto_convert();
-        tokens.extend(expanded);
     }
 }
 

@@ -1,6 +1,6 @@
 pub use entities::*;
 use proto_convert::derive::ProtoConvert;
-use proto_convert::{ProtoConvert, ProtoConvertPrimitive};
+use proto_convert::{ProtoConvert, ProtoConvertScalar};
 
 pub mod entities {
     include!(concat!(env!("OUT_DIR"), "/mod.rs"));
