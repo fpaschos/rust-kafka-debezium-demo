@@ -1,4 +1,4 @@
-use crate::proto_convert_enum::ProtoConvertEnum;
+use crate::proto_enum::ProtoConvertEnum;
 use crate::proto_struct::Struct;
 use darling::FromDeriveInput;
 use proc_macro2::{Ident, Span, TokenStream};

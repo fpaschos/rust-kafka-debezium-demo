@@ -2,7 +2,7 @@ use heck::{ToShoutySnakeCase, ToSnakeCase};
 use syn::{Attribute, Meta};
 
 pub mod proto_convert;
-mod proto_convert_enum;
+mod proto_enum;
 mod proto_struct;
 
 #[cfg(test)]
@@ -42,5 +42,5 @@ pub(crate) fn get_proto_field_name(name: &str, remove_last_char_if: Option<char>
             return name[..name.len() - 1].to_string();
         }
     }
-    return name.to_string();
+    name.to_string()
 }

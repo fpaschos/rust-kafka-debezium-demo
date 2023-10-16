@@ -27,7 +27,7 @@ impl TypeScanner {
 
         let top = self.stack.last_mut().unwrap();
         if let Some(nested_last) = top.args_mut().pop() {
-            self.stack.push(*nested_last);
+            self.stack.push(nested_last);
             true
         } else {
             false
@@ -59,8 +59,7 @@ impl Fold for TypeScanner {
             }
         }
 
-        let inner = syn::fold::fold_path(self, p);
-        inner
+        syn::fold::fold_path(self, p)
     }
 
     fn fold_path_arguments(&mut self, pa: PathArguments) -> PathArguments {

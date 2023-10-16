@@ -12,6 +12,7 @@ pub(crate) struct StructField {
     pub attrs: Option<FieldAttrs>,
 }
 
+#[cfg(test)]
 impl StructField {
     #[inline]
     pub(crate) fn is_optional(&self) -> bool {

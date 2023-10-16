@@ -9,6 +9,7 @@ fn main() {
         .pure()
         .out_dir(&out_dir)
         .input("tests/proto/entities.proto")
+        .input("tests/proto/timestamps.proto")
         .include("tests/proto")
         .customize(
             protobuf_codegen::Customize::default()
@@ -17,9 +18,10 @@ fn main() {
         )
         .run_from_script();
     let mod_file_content = r#"//@generated
-pub use self::entities::*; 
-
 mod entities;
+mod timestamps;
+pub use self::entities::*; 
+pub use self::timestamps::*;
 "#;
     let mod_file_path = Path::new(&out_dir).join("mod.rs");
 

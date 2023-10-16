@@ -2,13 +2,8 @@ use proc_macro2::Ident;
 
 #[derive(Debug, Clone)]
 pub(crate) enum NestedType {
-    Named {
-        name: Ident,
-        args: Vec<Box<NestedType>>,
-    },
-    Unnamed {
-        args: Vec<Box<NestedType>>,
-    },
+    Named { name: Ident, args: Vec<NestedType> },
+    Unnamed { args: Vec<NestedType> },
 }
 
 impl NestedType {
@@ -33,7 +28,7 @@ impl NestedType {
     }
 
     #[inline]
-    pub(crate) fn args(&self) -> &Vec<Box<NestedType>> {
+    pub(crate) fn args(&self) -> &Vec<NestedType> {
         match self {
             NestedType::Named { args, .. } => args,
             NestedType::Unnamed { args, .. } => args,
@@ -41,7 +36,7 @@ impl NestedType {
     }
 
     #[inline]
-    pub(crate) fn args_mut(&mut self) -> &mut Vec<Box<NestedType>> {
+    pub(crate) fn args_mut(&mut self) -> &mut Vec<NestedType> {
         match self {
             NestedType::Named { args, .. } => args,
             NestedType::Unnamed { args, .. } => args,
@@ -50,7 +45,7 @@ impl NestedType {
 
     #[inline]
     pub(crate) fn nest(&mut self, other: NestedType) {
-        self.args_mut().push(Box::new(other));
+        self.args_mut().push(other);
     }
 }
 
