@@ -97,7 +97,7 @@ impl ProtoConvertStruct {
 }
 
 impl ToTokens for ProtoConvertStruct {
-    fn to_tokens(&self, tokens: &mut proc_macro2::TokenStream) {
+    fn to_tokens(&self, tokens: &mut TokenStream) {
         let expanded = self.impl_proto_convert();
         tokens.extend(expanded);
     }
