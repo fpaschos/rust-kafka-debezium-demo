@@ -1,97 +1,9 @@
+use proto_convert::{ProtoConvert, ProtoConvertPrimitive, ProtoPrimitive};
 use protobuf::Enum;
-use std::str::FromStr;
 use uuid::Uuid;
+
 /// Fully expanded and manual experiments (these used to build the macros and the library traits synergy)
 mod proto;
-
-pub trait ProtoConvert<ProtoRepr>
-where
-    Self: Sized,
-{
-    /// Converts a reference of [`Self`] struct to proto [`Self::ProtoStruct`]
-    fn to_proto(&self) -> ProtoRepr;
-
-    /// Consumes a proto [`Self::ProtoStruct`] and returns a [`Self`] struct
-    fn from_proto(proto: ProtoRepr) -> Result<Self, anyhow::Error>;
-}
-
-///TODO see https://rust-lang.github.io/api-guidelines/future-proofing.html#c-sealed for sealed trait
-pub trait ProtoPrimitiveValue: Sized {
-    fn has_value(&self) -> bool;
-}
-impl ProtoPrimitiveValue for u32 {
-    fn has_value(&self) -> bool {
-        *self != 0
-    }
-}
-
-impl ProtoPrimitiveValue for i32 {
-    fn has_value(&self) -> bool {
-        *self != 0
-    }
-}
-
-impl ProtoPrimitiveValue for String {
-    fn has_value(&self) -> bool {
-        !self.is_empty()
-    }
-}
-
-impl ProtoPrimitiveValue for bool {
-    fn has_value(&self) -> bool {
-        *self
-    }
-}
-
-impl ProtoConvert<u32> for u32 {
-    fn to_proto(&self) -> Self {
-        *self
-    }
-
-    fn from_proto(proto: Self) -> Result<Self, anyhow::Error> {
-        Ok(proto)
-    }
-}
-
-impl ProtoConvert<i32> for i32 {
-    fn to_proto(&self) -> Self {
-        *self
-    }
-
-    fn from_proto(proto: Self) -> Result<Self, anyhow::Error> {
-        Ok(proto)
-    }
-}
-
-impl ProtoConvert<bool> for bool {
-    fn to_proto(&self) -> Self {
-        *self
-    }
-
-    fn from_proto(proto: Self) -> Result<Self, anyhow::Error> {
-        Ok(proto)
-    }
-}
-
-impl ProtoConvert<String> for String {
-    fn to_proto(&self) -> Self {
-        self.clone()
-    }
-
-    fn from_proto(proto: Self) -> Result<Self, anyhow::Error> {
-        Ok(proto)
-    }
-}
-
-impl ProtoConvert<String> for Uuid {
-    fn to_proto(&self) -> String {
-        self.to_string()
-    }
-
-    fn from_proto(proto: String) -> Result<Self, anyhow::Error> {
-        Ok(Uuid::from_str(&proto)?)
-    }
-}
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 enum EntityStatus {
@@ -100,8 +12,10 @@ enum EntityStatus {
     StatusC,
 }
 
-impl ProtoConvert<proto::EntityStatus> for EntityStatus {
-    fn to_proto(&self) -> proto::EntityStatus {
+// Example of manual implementation for enumeration to primitive
+impl ProtoConvert for EntityStatus {
+    type ProtoStruct = proto::EntityStatus;
+    fn to_proto(&self) -> Self::ProtoStruct {
         match self {
             Self::StatusA => proto::EntityStatus::STATUS_A,
             Self::StatusB => proto::EntityStatus::STATUS_B,
@@ -109,7 +23,7 @@ impl ProtoConvert<proto::EntityStatus> for EntityStatus {
         }
     }
 
-    fn from_proto(proto: proto::EntityStatus) -> Result<Self, anyhow::Error> {
+    fn from_proto(proto: Self::ProtoStruct) -> Result<Self, anyhow::Error> {
         match proto {
             proto::EntityStatus::STATUS_A => Ok(Self::StatusA),
             proto::EntityStatus::STATUS_B => Ok(Self::StatusB),
@@ -127,22 +41,25 @@ struct Entity {
     pub status: EntityStatus,
 }
 
-impl ProtoConvert<proto::Entity> for Entity {
-    fn to_proto(&self) -> proto::Entity {
+impl ProtoConvert for Entity {
+    type ProtoStruct = proto::Entity;
+    fn to_proto(&self) -> Self::ProtoStruct {
         let mut proto = proto::Entity::default();
-        proto.set_id(ProtoConvert::to_proto(&self.id).into());
-        proto.set_nonce(ProtoConvert::to_proto(&self.nonce).into());
-        proto.set_valid(ProtoConvert::to_proto(&self.valid).into());
-        proto.set_name(ProtoConvert::to_proto(&self.name).into());
-        proto.set_status(ProtoConvert::to_proto(&self.status).into());
+        proto.set_id(ProtoConvertPrimitive::to_primitive(&self.id));
+        proto.set_nonce(ProtoConvertPrimitive::to_primitive(&self.nonce));
+        proto.set_valid(ProtoConvertPrimitive::to_primitive(&self.valid));
+        proto.set_name(ProtoConvertPrimitive::to_primitive(&self.name));
+        // Special case for enum
+        proto.set_status(ProtoConvert::to_proto(&self.status));
         proto
     }
-    fn from_proto(proto: proto::Entity) -> Result<Self, anyhow::Error> {
+    fn from_proto(proto: Self::ProtoStruct) -> Result<Self, anyhow::Error> {
         let inner = Self {
-            id: ProtoConvert::from_proto(proto.id().to_owned())?,
-            nonce: ProtoConvert::from_proto(proto.nonce().to_owned())?,
-            valid: ProtoConvert::from_proto(proto.valid().to_owned())?,
-            name: ProtoConvert::from_proto(proto.name().to_owned())?,
+            id: ProtoConvertPrimitive::from_primitive(proto.id().to_owned())?,
+            nonce: ProtoConvertPrimitive::from_primitive(proto.nonce().to_owned())?,
+            valid: ProtoConvertPrimitive::from_primitive(proto.valid().to_owned())?,
+            name: ProtoConvertPrimitive::from_primitive(proto.name().to_owned())?,
+            // Special case for enum
             status: ProtoConvert::from_proto(proto.status().to_owned())?,
         };
         Ok(inner)
@@ -162,72 +79,73 @@ struct EntityWithOptionals {
     pub opt_status: Option<EntityStatus>,
 }
 
-impl ProtoConvert<proto::EntityWithOptionals> for EntityWithOptionals {
-    fn to_proto(&self) -> proto::EntityWithOptionals {
+impl ProtoConvert for EntityWithOptionals {
+    type ProtoStruct = proto::EntityWithOptionals;
+    fn to_proto(&self) -> Self::ProtoStruct {
         let mut proto = proto::EntityWithOptionals::default();
-        proto.set_id(ProtoConvert::to_proto(&self.id).into());
-        proto.set_nonce(ProtoConvert::to_proto(&self.nonce).into());
-        proto.set_valid(ProtoConvert::to_proto(&self.valid).into());
-        proto.set_name(ProtoConvert::to_proto(&self.name).into());
+        proto.set_id(ProtoConvertPrimitive::to_primitive(&self.id));
+        proto.set_nonce(ProtoConvertPrimitive::to_primitive(&self.nonce));
+        proto.set_valid(ProtoConvertPrimitive::to_primitive(&self.valid));
+        proto.set_name(ProtoConvertPrimitive::to_primitive(&self.name));
 
         // Only if there is value other default
         if let Some(value) = &self.opt_id {
-            proto.set_opt_id(ProtoConvert::to_proto(value).into());
+            proto.set_opt_id(ProtoConvertPrimitive::to_primitive(value));
         }
 
         // Only if there is value other default
         if let Some(value) = &self.opt_nonce {
-            proto.set_opt_nonce(ProtoConvert::to_proto(value).into());
+            proto.set_opt_nonce(ProtoConvertPrimitive::to_primitive(value));
         }
 
         if let Some(value) = &self.opt_valid {
-            proto.set_opt_valid(ProtoConvert::to_proto(value).into());
+            proto.set_opt_valid(ProtoConvertPrimitive::to_primitive(value));
         }
 
         if let Some(value) = &self.opt_name {
-            proto.set_opt_name(ProtoConvert::to_proto(value).into());
+            proto.set_opt_name(ProtoConvertPrimitive::to_primitive(value));
         }
 
         if let Some(value) = &self.opt_status {
-            proto.set_opt_status(ProtoConvert::to_proto(value).into());
+            proto.set_opt_status(ProtoConvert::to_proto(value));
         }
         proto
     }
-    fn from_proto(proto: proto::EntityWithOptionals) -> Result<Self, anyhow::Error> {
+    fn from_proto(proto: Self::ProtoStruct) -> Result<Self, anyhow::Error> {
         let inner = Self {
-            id: ProtoConvert::from_proto(proto.id().to_owned())?,
-            nonce: ProtoConvert::from_proto(proto.nonce().to_owned())?,
-            valid: ProtoConvert::from_proto(proto.valid().to_owned())?,
-            name: ProtoConvert::from_proto(proto.name().to_owned())?,
+            id: ProtoConvertPrimitive::from_primitive(proto.id().to_owned())?,
+            nonce: ProtoConvertPrimitive::from_primitive(proto.nonce().to_owned())?,
+            valid: ProtoConvertPrimitive::from_primitive(proto.valid().to_owned())?,
+            name: ProtoConvertPrimitive::from_primitive(proto.name().to_owned())?,
             // Special case for options
             opt_id: {
                 let v = proto.opt_id().to_owned();
-                if ProtoPrimitiveValue::has_value(&v) {
-                    Some(ProtoConvert::from_proto(v)?)
+                if ProtoPrimitive::has_value(&v) {
+                    Some(ProtoConvertPrimitive::from_primitive(v)?)
                 } else {
                     None
                 }
             },
             opt_nonce: {
                 let v = proto.opt_nonce().to_owned();
-                if ProtoPrimitiveValue::has_value(&v) {
-                    Some(ProtoConvert::from_proto(v)?)
+                if ProtoPrimitive::has_value(&v) {
+                    Some(ProtoConvertPrimitive::from_primitive(v)?)
                 } else {
                     None
                 }
             },
             opt_valid: {
                 let v = proto.opt_valid().to_owned();
-                if ProtoPrimitiveValue::has_value(&v) {
-                    Some(ProtoConvert::from_proto(v)?)
+                if ProtoPrimitive::has_value(&v) {
+                    Some(ProtoConvertPrimitive::from_primitive(v)?)
                 } else {
                     None
                 }
             },
             opt_name: {
                 let v = proto.opt_name().to_owned();
-                if ProtoPrimitiveValue::has_value(&v) {
-                    Some(ProtoConvert::from_proto(v)?)
+                if ProtoPrimitive::has_value(&v) {
+                    Some(ProtoConvertPrimitive::from_primitive(v)?)
                 } else {
                     None
                 }
@@ -236,7 +154,7 @@ impl ProtoConvert<proto::EntityWithOptionals> for EntityWithOptionals {
             opt_status: {
                 let v = proto.opt_status().to_owned();
                 // convert enum value to i32 in order to check ProtoPrimitive value
-                if ProtoPrimitiveValue::has_value(&v.value()) {
+                if ProtoPrimitive::has_value(&v.value()) {
                     Some(ProtoConvert::from_proto(v)?)
                 } else {
                     None
@@ -247,6 +165,8 @@ impl ProtoConvert<proto::EntityWithOptionals> for EntityWithOptionals {
     }
 }
 
+// Example of manual implementation for uuid to primitive
+
 #[derive(Debug, PartialEq)]
 pub struct EntityUuids {
     uuid_str: Uuid,
@@ -255,25 +175,26 @@ pub struct EntityUuids {
     // uuid_4: Option<Uuid>,
 }
 
-impl ProtoConvert<proto::EntityUuids> for EntityUuids {
-    fn to_proto(&self) -> proto::EntityUuids {
+impl ProtoConvert for EntityUuids {
+    type ProtoStruct = proto::EntityUuids;
+    fn to_proto(&self) -> Self::ProtoStruct {
         let mut proto = proto::EntityUuids::default();
-        proto.set_uuid_str(ProtoConvert::to_proto(&self.uuid_str).into());
+        proto.set_uuid_str(ProtoConvertPrimitive::to_primitive(&self.uuid_str));
 
         // Only if there is value other default
         if let Some(value) = &self.opt_uuid_str {
-            proto.set_opt_uuid_str(ProtoConvert::to_proto(value).into());
+            proto.set_opt_uuid_str(ProtoConvertPrimitive::to_primitive(value));
         }
 
         proto
     }
-    fn from_proto(proto: proto::EntityUuids) -> Result<Self, anyhow::Error> {
+    fn from_proto(proto: Self::ProtoStruct) -> Result<Self, anyhow::Error> {
         let inner = Self {
-            uuid_str: ProtoConvert::from_proto(proto.uuid_str().to_owned())?,
+            uuid_str: ProtoConvertPrimitive::from_primitive(proto.uuid_str().to_owned())?,
             opt_uuid_str: {
                 let v = proto.opt_uuid_str().to_owned();
-                if ProtoPrimitiveValue::has_value(&v) {
-                    Some(ProtoConvert::from_proto(v)?)
+                if ProtoPrimitive::has_value(&v) {
+                    Some(ProtoConvertPrimitive::from_primitive(v)?)
                 } else {
                     None
                 }
@@ -289,8 +210,9 @@ pub struct NestedEntity {
     second: Option<Entity>,
 }
 
-impl ProtoConvert<proto::NestedEntity> for NestedEntity {
-    fn to_proto(&self) -> proto::NestedEntity {
+impl ProtoConvert for NestedEntity {
+    type ProtoStruct = proto::NestedEntity;
+    fn to_proto(&self) -> Self::ProtoStruct {
         let mut proto = proto::NestedEntity::default();
         proto.set_first(ProtoConvert::to_proto(&self.first).into());
         // Only if there is value other default
@@ -299,7 +221,7 @@ impl ProtoConvert<proto::NestedEntity> for NestedEntity {
         }
         proto
     }
-    fn from_proto(proto: proto::NestedEntity) -> Result<Self, anyhow::Error> {
+    fn from_proto(proto: Self::ProtoStruct) -> Result<Self, anyhow::Error> {
         let inner = Self {
             first: ProtoConvert::from_proto(proto.first().to_owned())?,
             second: {

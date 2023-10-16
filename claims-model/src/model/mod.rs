@@ -1,5 +1,5 @@
 use proto_convert::derive::ProtoConvert;
-use proto_convert::ProtoConvert;
+use proto_convert::{ProtoConvert, ProtoConvertPrimitive, ProtoPrimitive};
 use serde::{Deserialize, Serialize};
 
 // Re export proto models on feature "proto"

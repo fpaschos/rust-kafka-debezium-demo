@@ -2,7 +2,7 @@ use darling::FromMeta;
 use quote::quote;
 use syn::{Data, DeriveInput};
 
-use crate::experimental::{StructAttrs, StructField};
+use crate::proto_struct::{StructAttrs, StructField};
 use crate::types::{PrimitiveTy, Ty};
 
 #[test]

@@ -1,6 +1,6 @@
 use crate::proto::EntityCommon;
 use proto_convert::derive::ProtoConvert;
-use proto_convert::ProtoConvert;
+use proto_convert::{ProtoConvert, ProtoConvertPrimitive};
 use std::default::Default;
 mod proto;
 

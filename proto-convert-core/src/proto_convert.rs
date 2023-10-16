@@ -1,5 +1,5 @@
 use crate::proto_convert_enum::ProtoConvertEnum;
-use crate::proto_convert_struct::ProtoConvertStruct;
+use crate::proto_struct::Struct;
 use darling::FromDeriveInput;
 use proc_macro2::{Ident, Span, TokenStream};
 use quote::{quote, ToTokens};
@@ -13,7 +13,7 @@ pub fn implement_proto_convert(input: TokenStream) -> TokenStream {
 }
 
 enum ProtoConvert {
-    Struct(ProtoConvertStruct),
+    Struct(Struct),
     Enum(ProtoConvertEnum),
 }
 
@@ -24,9 +24,9 @@ impl ProtoConvert {
             Self::Enum(inner) => &inner.name,
         }
     }
-    fn implement_proto_convert(&self) -> impl ToTokens {
+    fn implement_proto_convert(&self) -> TokenStream {
         match self {
-            Self::Struct(data) => quote! { #data },
+            Self::Struct(data) => data.implement_proto_convert(),
             Self::Enum(data) => quote! { #data },
         }
     }
@@ -44,7 +44,8 @@ impl ToTokens for ProtoConvert {
             mod #mod_name {
                 use super::*;
 
-                use protobuf::Message as _ProtobufMessage;
+                use protobuf::Message as _ProtobufMessage; // TODO do we need this?
+
 
                 #proto_convert
             }
@@ -57,11 +58,10 @@ impl ToTokens for ProtoConvert {
 impl darling::FromDeriveInput for ProtoConvert {
     fn from_derive_input(input: &DeriveInput) -> darling::Result<Self> {
         match &input.data {
-            Data::Struct(data) => Ok(ProtoConvert::Struct(ProtoConvertStruct::from_derive_input(
-                input.ident.clone(),
-                input.attrs.as_ref(),
-                data,
-            )?)),
+            Data::Struct(data) => {
+                let s = Struct::try_from_data(&input.ident, data, &input.attrs)?;
+                Ok(ProtoConvert::Struct(s))
+            }
             Data::Enum(data) => Ok(ProtoConvert::Enum(ProtoConvertEnum::from_derive_input(
                 input.ident.clone(),
                 input.attrs.as_ref(),

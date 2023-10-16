@@ -1,11 +1,9 @@
 use heck::{ToShoutySnakeCase, ToSnakeCase};
 use syn::{Attribute, Meta};
 
-mod attributes;
-mod experimental;
-pub mod impl_proto_convert;
+pub mod proto_convert;
 mod proto_convert_enum;
-mod proto_convert_struct;
+mod proto_struct;
 
 #[cfg(test)]
 mod tests;
@@ -33,4 +31,16 @@ pub(crate) fn rename_item(item: &str, to_case: &str) -> darling::Result<String> 
             to_case
         ))),
     }
+}
+
+/// Returns a struct field name given an identifier and a rename field attribute.
+/// remove_last_char_if is used in cases that we want to remove special characters such as '_'
+pub(crate) fn get_proto_field_name(name: &str, remove_last_char_if: Option<char>) -> String {
+    if let Some(c) = remove_last_char_if {
+        let mut rename_rev = name.chars().rev().peekable();
+        if rename_rev.peek().copied() == Some(c) {
+            return name[..name.len() - 1].to_string();
+        }
+    }
+    return name.to_string();
 }

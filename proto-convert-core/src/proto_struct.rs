@@ -1,13 +1,13 @@
 use darling::FromMeta;
 use proc_macro2::{Ident, TokenStream};
-use quote::{format_ident, quote};
-use syn::{Attribute, Data, DataStruct, DeriveInput, Path};
+use quote::{format_ident, quote, ToTokens};
+use syn::{Attribute, DataStruct, Path};
 
-use crate::find_proto_convert_meta;
 use crate::types::{PrimitiveTy, Ty};
+use crate::{find_proto_convert_meta, get_proto_field_name};
 
 pub(crate) struct StructField {
-    pub name: String, // TODO keep ident of field here for better error handling
+    pub name: Ident,
     pub ty: Ty,
     pub attrs: Option<FieldAttrs>,
 }
@@ -35,7 +35,7 @@ impl StructField {
         let ty = Ty::try_from_field(field)?;
 
         Ok(Self {
-            name: name.to_string(),
+            name: name.clone(),
             ty,
             attrs,
         })
@@ -48,11 +48,19 @@ impl StructField {
             return quote! {};
         }
 
-        // TODO extract final proto field name from attrs
-        let proto_field_name = &self.name;
+        //Check field rename
+        let proto_field_setter = if let Some(FieldAttrs {
+            rename: Some(new_name),
+            ..
+        }) = &self.attrs
+        {
+            let field_name = get_proto_field_name(new_name.as_str(), Some('_'));
+            format_ident!("set_{}", field_name)
+        } else {
+            format_ident!("set_{}", &self.name)
+        };
 
-        let field_getter = quote::format_ident!("{}", self.name);
-        let proto_field_setter = quote::format_ident!("set_{}", proto_field_name);
+        let struct_field = &self.name;
 
         let to_proto_method = if self.ty.is_primitive() {
             quote! { ProtoConvertPrimitive::to_primitive }
@@ -63,30 +71,39 @@ impl StructField {
         if self.ty.is_optional() {
             // Optional field setter
             quote! {
-                if let Some(value) = &self.#field_getter {
+                if let Some(value) = &self.#struct_field {
                     proto.#proto_field_setter(#to_proto_method(value).into());
                 }
             }
         } else {
             // Non optional field just a setter
             quote! {
-                proto.#proto_field_setter(#to_proto_method(&self.#field_getter).into());
+                proto.#proto_field_setter(#to_proto_method(&self.#struct_field).into());
             }
         }
     }
 
     // TODO use struct attrs for rename_all
     pub(crate) fn implement_setter(&self, _struct_attrs: &StructAttrs) -> TokenStream {
-        let struct_field = format_ident!("{}", self.name);
-
-        // TODO extract final proto field name from attrs
-        let proto_field_getter = struct_field.clone(); // Here proto and struct field are the same
+        let struct_field = &self.name;
 
         // Fast fail skip attribute
         if let Some(FieldAttrs { skip: true, .. }) = &self.attrs {
             // Default struct setter for the skipped fields.
             return quote! { #struct_field: Default::default(), };
         }
+
+        //Check field rename
+        let proto_field_getter = if let Some(FieldAttrs {
+            rename: Some(new_name),
+            ..
+        }) = &self.attrs
+        {
+            let field_name = get_proto_field_name(new_name.as_str(), None);
+            format_ident!("{}", field_name)
+        } else {
+            struct_field.clone() // Here proto and struct field are the same
+        };
 
         let from_proto_method = if self.ty.is_primitive() {
             quote! { ProtoConvertPrimitive::from_primitive }
@@ -133,7 +150,7 @@ impl StructField {
 }
 
 pub(crate) struct Struct {
-    pub name: String, // TODO keep ident of struct name here for better error handling
+    pub name: Ident,
     pub attrs: StructAttrs,
     pub fields: Vec<StructField>,
 }
@@ -157,7 +174,7 @@ impl Struct {
             .collect::<Result<Vec<_>, _>>()?;
 
         Ok(Self {
-            name: name.clone().to_string(),
+            name: name.clone(),
             fields,
             attrs,
         })
@@ -188,17 +205,24 @@ impl Struct {
         };
 
         quote! {
-            impl ProtoConvert<#proto_struct> for #struct_name {
-
-                fn to_proto(&self) -> #proto_struct {
+            impl ProtoConvert for #struct_name {
+                type ProtoStruct = #proto_struct;
+                fn to_proto(&self) -> Self::ProtoStruct {
                     #to_proto_impl
                 }
 
-                fn from_proto(proto: #proto_struct) -> std::result::Result<Self, anyhow::Error> {
+                fn from_proto(proto: Self::ProtoStruct) -> std::result::Result<Self, anyhow::Error> {
                     #from_proto_impl
                 }
             }
         }
+    }
+}
+
+impl ToTokens for Struct {
+    fn to_tokens(&self, tokens: &mut TokenStream) {
+        let expanded = self.implement_proto_convert();
+        tokens.extend(expanded);
     }
 }
 
@@ -210,6 +234,7 @@ pub(crate) struct StructAttrs {
     pub rename_all: Option<String>,
 }
 
+/// Meta attributes for `struct field` items
 #[derive(Debug, darling::FromMeta, Default)]
 #[darling(default)]
 pub(crate) struct FieldAttrs {
@@ -219,22 +244,4 @@ pub(crate) struct FieldAttrs {
     pub enumeration: bool,
     /// Optional renaming of a single struct field before mapping to the proto entity.
     pub rename: Option<String>,
-}
-
-pub(crate) fn from_derive_input(input: &DeriveInput) -> darling::Result<Struct> {
-    match &input.data {
-        Data::Struct(data) => {
-            let s = Struct::try_from_data(&input.ident, data, &input.attrs)?;
-            Ok(s)
-        }
-
-        //     Ok(ProtoConvert::Struct(ProtoConvertStruct::from_derive_input(
-        //     input.ident.clone(),
-        //     input.attrs.as_ref(),
-        //     data,
-        // )?)),
-        _ => Err(darling::Error::unsupported_shape(
-            "Macro supports only `struct` and `enum` items",
-        )),
-    }
 }
