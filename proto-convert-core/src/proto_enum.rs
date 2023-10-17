@@ -2,23 +2,23 @@ use crate::{find_proto_convert_meta, rename_item};
 use darling::FromMeta;
 use heck::{ToSnakeCase, ToUpperCamelCase};
 use proc_macro2::{Ident, Span, TokenStream};
-use quote::{quote, ToTokens};
+use quote::quote;
 use syn::{Attribute, DataEnum, Fields, Path, Type, Variant};
 
 #[derive(Debug)]
-pub(crate) struct ProtoConvertEnum {
+pub(crate) struct Enum {
     pub name: Ident,
-    pub attrs: ProtoConvertEnumAttrs,
+    pub attrs: EnumAttrs,
     pub variants: Vec<EnumVariant>,
 }
 
-impl ProtoConvertEnum {
+impl Enum {
     pub(crate) fn from_derive_input(
         name: Ident,
-        attrs: &[Attribute],
         data: &DataEnum,
+        attrs: &[Attribute],
     ) -> darling::Result<Self> {
-        let attrs = ProtoConvertEnumAttrs::try_from(attrs)?;
+        let attrs = EnumAttrs::try_from(attrs)?;
 
         let variants: Vec<EnumVariant> = data
             .variants
@@ -40,7 +40,7 @@ impl ProtoConvertEnum {
     }
 
     /// Implementation of (`to_proto_impl`, `from_proto_impl`) for `enumeration` variant cases.
-    fn impl_enumeration_to_from_proto(&self) -> (TokenStream, TokenStream) {
+    fn implement_enumeration(&self) -> (TokenStream, TokenStream) {
         // Proto struct name
         let proto_struct = &self.attrs.source;
 
@@ -83,7 +83,7 @@ impl ProtoConvertEnum {
     }
 
     /// Implementation of (`to_proto_impl`, `from_proto_impl`) for `one_of` variant cases.
-    fn impl_one_of_to_from_proto(&self) -> (TokenStream, TokenStream) {
+    fn implement_one_of(&self) -> (TokenStream, TokenStream) {
         // Variant outer name
         let name = &self.name;
 
@@ -156,16 +156,16 @@ impl ProtoConvertEnum {
     }
 
     /// Implementation of proto_convert
-    fn impl_proto_convert(&self) -> TokenStream {
+    pub(crate) fn implement_proto_convert(&self) -> TokenStream {
         // Variant outer name
         let name = &self.name;
         // Proto struct name
         let proto_struct = &self.attrs.source;
 
         let (to_proto_impl, from_proto_impl) = if self.attrs.is_enumeration() {
-            self.impl_enumeration_to_from_proto()
+            self.implement_enumeration()
         } else {
-            self.impl_one_of_to_from_proto()
+            self.implement_one_of()
         };
 
         quote! {
@@ -192,17 +192,7 @@ impl ProtoConvertEnum {
     }
 }
 
-impl ToTokens for ProtoConvertEnum {
-    fn to_tokens(&self, tokens: &mut TokenStream) {
-        let proto_convert = self.impl_proto_convert();
-
-        let expanded = quote! {
-            #proto_convert
-        };
-        tokens.extend(expanded)
-    }
-}
-
+// Meta attribute used in `enum` items to mark one_of field name
 #[derive(Debug, FromMeta)]
 pub(crate) struct OneOf {
     field: Ident,
@@ -210,7 +200,7 @@ pub(crate) struct OneOf {
 
 /// Meta attributes for `enum` items.
 #[derive(Debug, FromMeta)]
-pub(crate) struct ProtoConvertEnumAttrs {
+pub(crate) struct EnumAttrs {
     /// The source proto entity that we map to
     source: Path,
 
@@ -226,11 +216,11 @@ pub(crate) struct ProtoConvertEnumAttrs {
     rename_variants: Option<String>,
 }
 
-impl ProtoConvertEnumAttrs {
-    pub(crate) fn is_enumeration(&self) -> bool {
+impl EnumAttrs {
+    pub fn is_enumeration(&self) -> bool {
         self.enumeration.is_some_and(|e| e)
     }
-    pub(crate) fn validate(self) -> darling::Result<Self> {
+    pub fn validate(self) -> darling::Result<Self> {
         if self.is_enumeration() && self.one_of.is_some() {
             darling::Error::unsupported_shape("Enum attributes `enumeration` and `one_of` are mutually excluded (use only one of them)");
         }
@@ -238,7 +228,7 @@ impl ProtoConvertEnumAttrs {
     }
 }
 
-impl TryFrom<&[Attribute]> for ProtoConvertEnumAttrs {
+impl TryFrom<&[Attribute]> for EnumAttrs {
     type Error = darling::Error;
 
     fn try_from(attrs: &[Attribute]) -> Result<Self, Self::Error> {

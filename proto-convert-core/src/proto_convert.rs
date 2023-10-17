@@ -1,8 +1,9 @@
-use crate::proto_enum::ProtoConvertEnum;
+use crate::proto_enum::Enum;
 use crate::proto_struct::Struct;
 use darling::FromDeriveInput;
-use proc_macro2::{Ident, Span, TokenStream};
-use quote::{quote, ToTokens};
+use heck::ToSnakeCase;
+use proc_macro2::{Ident, TokenStream};
+use quote::{format_ident, quote, ToTokens};
 use syn::{Data, DeriveInput};
 
 pub fn implement_proto_convert(input: TokenStream) -> TokenStream {
@@ -14,7 +15,7 @@ pub fn implement_proto_convert(input: TokenStream) -> TokenStream {
 
 enum ProtoConvert {
     Struct(Struct),
-    Enum(ProtoConvertEnum),
+    Enum(Enum),
 }
 
 impl ProtoConvert {
@@ -27,17 +28,18 @@ impl ProtoConvert {
     fn implement_proto_convert(&self) -> TokenStream {
         match self {
             Self::Struct(data) => data.implement_proto_convert(),
-            Self::Enum(data) => quote! { #data },
+            Self::Enum(data) => data.implement_proto_convert(),
         }
     }
 }
 
 impl ToTokens for ProtoConvert {
     fn to_tokens(&self, tokens: &mut TokenStream) {
-        let mod_name = Ident::new(
-            &format!("proto_convert_impl_{}", self.name()),
-            Span::call_site(),
+        let mod_name = format_ident!(
+            "proto_convert_impl_{}",
+            self.name().to_string().to_snake_case()
         );
+
         let proto_convert = self.implement_proto_convert();
 
         let expanded = quote! {
@@ -62,10 +64,10 @@ impl darling::FromDeriveInput for ProtoConvert {
                 let s = Struct::try_from_data(&input.ident, data, &input.attrs)?;
                 Ok(ProtoConvert::Struct(s))
             }
-            Data::Enum(data) => Ok(ProtoConvert::Enum(ProtoConvertEnum::from_derive_input(
+            Data::Enum(data) => Ok(ProtoConvert::Enum(Enum::from_derive_input(
                 input.ident.clone(),
-                input.attrs.as_ref(),
                 data,
+                input.attrs.as_ref(),
             )?)),
             _ => Err(darling::Error::unsupported_shape(
                 "Macro supports only `struct` and `enum` items",

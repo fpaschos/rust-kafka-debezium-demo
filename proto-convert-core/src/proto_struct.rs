@@ -3,7 +3,7 @@ use proc_macro2::{Ident, TokenStream};
 use quote::{format_ident, quote};
 use syn::{Attribute, DataStruct, Path};
 
-use crate::types::{ScalarTy, Ty};
+use crate::types::{ScalarType, Ty};
 use crate::{find_proto_convert_meta, get_proto_field_name};
 
 pub(crate) struct StructField {
@@ -118,7 +118,7 @@ impl StructField {
             // Determine the appropriate has_value method
             let has_value_check = match self.ty {
                 Ty::Scalar {
-                    ty: ScalarTy::Enumeration,
+                    ty: ScalarType::Enumeration,
                     ..
                 } => quote! {
                     ProtoScalar::has_value(&value.value())

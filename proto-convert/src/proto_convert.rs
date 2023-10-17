@@ -129,3 +129,16 @@ impl ProtoConvertScalar<String> for Uuid {
         Ok(res)
     }
 }
+
+// Implementation from https://stackoverflow.com/questions/65268226/rust-deserialization-converting-vector-of-bytes-to-hashset-of-uuid
+impl ProtoConvertScalar<Vec<u8>> for Uuid {
+    fn to_scalar(&self) -> Vec<u8> {
+        let mut res = Vec::with_capacity(16);
+        res.extend_from_slice(self.as_bytes());
+        res
+    }
+
+    fn from_scalar(proto: Vec<u8>) -> Result<Self, Error> {
+        Ok(Uuid::from_slice(&proto)?)
+    }
+}
