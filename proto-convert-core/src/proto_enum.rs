@@ -13,8 +13,8 @@ pub(crate) struct Enum {
 }
 
 impl Enum {
-    pub(crate) fn from_derive_input(
-        name: Ident,
+    pub(crate) fn try_from_data(
+        name: &Ident,
         data: &DataEnum,
         attrs: &[Attribute],
     ) -> darling::Result<Self> {
@@ -33,7 +33,7 @@ impl Enum {
             .collect::<Result<Vec<_>, _>>()?;
 
         Ok(Self {
-            name,
+            name: name.clone(),
             attrs,
             variants,
         })
@@ -193,27 +193,27 @@ impl Enum {
 }
 
 // Meta attribute used in `enum` items to mark one_of field name
-#[derive(Debug, FromMeta)]
+#[derive(Debug, FromMeta, PartialEq)]
 pub(crate) struct OneOf {
-    field: Ident,
+    pub field: Ident,
 }
 
 /// Meta attributes for `enum` items.
 #[derive(Debug, FromMeta)]
 pub(crate) struct EnumAttrs {
     /// The source proto entity that we map to
-    source: Path,
+    pub source: Path,
 
     /// Indicates that the proto entity that we map to has an `oneof` enumeration structure.
     /// Mutually exclusive with `enumeration`.
-    one_of: Option<OneOf>,
+    pub one_of: Option<OneOf>,
 
     /// Indicates that the proto entity is a simple enumeration.
     /// Mutually exclusive with `one_of`
-    enumeration: Option<bool>,
+    pub enumeration: Option<bool>,
 
     /// Optional renaming of the variant fields before mapping to the proto entity.
-    rename_variants: Option<String>,
+    pub rename_variants: Option<String>,
 }
 
 impl EnumAttrs {
@@ -222,7 +222,7 @@ impl EnumAttrs {
     }
     pub fn validate(self) -> darling::Result<Self> {
         if self.is_enumeration() && self.one_of.is_some() {
-            darling::Error::unsupported_shape("Enum attributes `enumeration` and `one_of` are mutually excluded (use only one of them)");
+            return Err(darling::Error::unsupported_shape("Enum attributes `enumeration` and `one_of` are mutually excluded (use only one of them)"));
         }
         Ok(self)
     }
@@ -242,8 +242,8 @@ impl TryFrom<&[Attribute]> for EnumAttrs {
 
 #[derive(Debug)]
 pub(crate) struct EnumVariant {
-    name: Ident,
-    field_name: Option<Path>,
+    pub name: Ident,
+    pub field_name: Option<Path>,
 }
 
 impl EnumVariant {

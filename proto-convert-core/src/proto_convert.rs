@@ -64,8 +64,8 @@ impl darling::FromDeriveInput for ProtoConvert {
                 let s = Struct::try_from_data(&input.ident, data, &input.attrs)?;
                 Ok(ProtoConvert::Struct(s))
             }
-            Data::Enum(data) => Ok(ProtoConvert::Enum(Enum::from_derive_input(
-                input.ident.clone(),
+            Data::Enum(data) => Ok(ProtoConvert::Enum(Enum::try_from_data(
+                &input.ident,
                 data,
                 input.attrs.as_ref(),
             )?)),

@@ -1,4 +1,4 @@
-use crate::tests::{assert_tokens_eq, from_derive_input};
+use crate::tests::{assert_tokens_eq, from_derive_input_struct};
 use quote::quote;
 use syn::DeriveInput;
 
@@ -15,7 +15,7 @@ fn implement_struct_scalar_types_test() {
 
     let input = syn::parse2::<DeriveInput>(fragment.into()).unwrap();
 
-    let s = from_derive_input(&input).unwrap();
+    let s = from_derive_input_struct(&input).unwrap();
 
     let expected = quote! {
         impl ProtoConvert for Test {
@@ -67,7 +67,7 @@ fn implement_struct_non_scalar_types_test() {
 
     let input = syn::parse2::<DeriveInput>(fragment.into()).unwrap();
 
-    let s = from_derive_input(&input).unwrap();
+    let s = from_derive_input_struct(&input).unwrap();
 
     let expected = quote! {
         impl ProtoConvert for Test {
@@ -121,7 +121,7 @@ fn implement_struct_rename_attributes_test() {
 
     let input = syn::parse2::<DeriveInput>(fragment.into()).unwrap();
 
-    let s = from_derive_input(&input).unwrap();
+    let s = from_derive_input_struct(&input).unwrap();
 
     let expected = quote! {
         impl ProtoConvert for Test {
