@@ -18,6 +18,7 @@ struct NestedEntity {
     pub first: Entity,
     pub second: Entity,
 }
+
 #[derive(Debug, ProtoConvert, PartialEq)]
 #[proto_convert(
     source = "proto::HierarchyEntity",

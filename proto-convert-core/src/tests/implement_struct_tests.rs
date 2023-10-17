@@ -114,8 +114,6 @@ fn implement_struct_rename_attributes_test() {
             r#type: Entity,
             #[proto_convert(rename = "other_name")]
             opt_entity: Option<Entity>,
-            // #[proto_convert(rename = "scalar_renamed")]
-            // scalar: u32,
         }
     };
 
@@ -135,10 +133,6 @@ fn implement_struct_rename_attributes_test() {
                     proto.set_other_name(ProtoConvert::to_proto(value).into());
                 }
 
-                // if let Some(value) = &self.scalar {
-                //     proto.set_scalar_renamed(ProtoConvertScalar::to_scalar(value).into());
-                // }
-
                 proto
             }
 
@@ -153,7 +147,6 @@ fn implement_struct_rename_attributes_test() {
                             None
                         }
                     },
-                    // scalar: ProtoConvertScalar::from_scalar(proto.scalar_renamed().to_owned())?,
                 };
                 Ok(inner)
             }

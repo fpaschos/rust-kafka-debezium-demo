@@ -94,7 +94,7 @@ impl Enum {
 
                 let setter = Ident::new(&format!("set_{}", proto_variant_name), Span::call_site());
                 quote! {
-                     #name::#variant_name(value) => inner.#setter(value.to_proto()),
+                     Self::#variant_name(value) => inner.#setter(value.to_proto()),
                 }
             });
 
@@ -140,7 +140,7 @@ impl Enum {
                 let field_name = &variant.field_name;
                 quote! {
                     Some(#proto_one_of_enum::#variant_name(value)) => {
-                        #field_name::from_proto(value).map(#name::#variant_name)
+                        #field_name::from_proto(value).map(Self::#variant_name)
                     }
                 }
             });
@@ -148,7 +148,7 @@ impl Enum {
             quote! {
                 match proto.#one_of_field {
                      #( #match_arms )*
-                     _ => Err(anyhow::anyhow!(stringify!(Failed to decode enum #name from proto entity))),
+                     _ => Err(anyhow::anyhow!(stringify!(Failed to decode enum #name from proto entity)))
                 }
             }
         };

@@ -3,6 +3,7 @@ use crate::proto_struct::Struct;
 use proc_macro2::TokenStream;
 use syn::{Data, DeriveInput};
 
+mod implement_enum_tests;
 mod implement_struct_tests;
 mod parse_enum_tests;
 mod parse_struct_tests;

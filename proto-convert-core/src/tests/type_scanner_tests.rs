@@ -47,18 +47,17 @@ fn test_fold_type() {
 // #[test]
 // fn test_weird_types() {
 //     let fragment: Path = parse_quote! {
-//       u8
+//       &u8
 //     };
 //
 //     let mut scanner = TypeScanner::default();
 //     let res = scanner.scan(fragment);
-//     assert_eq!(res.to_string(), "u8".to_string());
+//     assert_eq!(res.to_string(), "&u8".to_string());
 //
 //     let fragment: Path = parse_quote! {
 //       Mutex<u8,u8, Option<Vec<(u8,u8)>>>
 //     };
 //
-//     let mut scanner = TypeScanner::default();
 //     let res = scanner.scan(fragment);
 //     assert_eq!(
 //         res.to_string(),
