@@ -53,10 +53,8 @@ impl Fold for TypeScanner {
 
         if self.stack.is_empty() {
             self.stack.push(ty);
-        } else {
-            if let Some(last) = self.stack.last_mut() {
-                last.nest(ty);
-            }
+        } else if let Some(last) = self.stack.last_mut() {
+            last.nest(ty);
         }
 
         syn::fold::fold_path(self, p)

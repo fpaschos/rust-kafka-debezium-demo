@@ -12,8 +12,6 @@ pub(crate) enum ScalarType {
     Bool,
     String,
     VecBytes,
-    // Special case for enumerations fall back to u32
-    Enumeration,
 }
 
 #[derive(Debug, PartialEq)]

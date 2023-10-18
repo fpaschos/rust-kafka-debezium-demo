@@ -3,7 +3,7 @@ use proc_macro2::{Ident, TokenStream};
 use quote::{format_ident, quote};
 use syn::{Attribute, DataStruct, Path};
 
-use crate::types::{ScalarType, Ty};
+use crate::types::Ty;
 use crate::{find_proto_convert_meta, get_proto_field_name};
 
 pub(crate) struct StructField {
@@ -26,20 +26,49 @@ impl StructField {
             darling::Error::unsupported_shape("Macro supports only structs with named fields")
         })?;
 
+        let ty = Ty::try_from_field(field)?;
+
         let meta = find_proto_convert_meta(&field.attrs);
         let attrs = if let Some(meta) = meta {
-            Some(FieldAttrs::from_meta(meta)?)
+            Some(FieldAttrs::try_from_meta(meta)?)
         } else {
             None
         };
-
-        let ty = Ty::try_from_field(field)?;
 
         Ok(Self {
             name: name.clone(),
             ty,
             attrs,
         })
+    }
+
+    pub fn determine_to_proto_method(&self) -> TokenStream {
+        // First consult field attributes that override struct type
+        if let Some(attrs) = &self.attrs {
+            match &attrs.with {
+                // Override self.ty for scalar, enumeration properties
+                None if attrs.scalar || attrs.enumeration => {
+                    return quote! { ProtoConvertScalar::to_scalar };
+                }
+                // Override implementation for with module  scalar
+                Some(with) if attrs.scalar || attrs.enumeration || self.ty.is_scalar() => {
+                    return quote! { #with::to_scalar };
+                }
+                // Override implementation for with module  non scalar
+                Some(with) => {
+                    return quote! { #with::to_proto };
+                }
+                // For all other possibly invalid combinations proceed to defaults (consult self.ty)
+                _ => {}
+            };
+        }
+
+        // If no related attributes found return defaults
+        if self.ty.is_scalar() {
+            quote! { ProtoConvertScalar::to_scalar }
+        } else {
+            quote! { ProtoConvert::to_proto }
+        }
     }
 
     // TODO use struct attrs for rename_all
@@ -63,11 +92,7 @@ impl StructField {
 
         let struct_field = &self.name;
 
-        let to_proto_method = if self.ty.is_scalar() {
-            quote! { ProtoConvertScalar::to_scalar }
-        } else {
-            quote! { ProtoConvert::to_proto }
-        };
+        let to_proto_method = self.determine_to_proto_method();
 
         if self.ty.is_optional() {
             // Optional field setter
@@ -84,7 +109,53 @@ impl StructField {
         }
     }
 
+    pub fn determine_from_proto_method(&self) -> TokenStream {
+        // First consult field attributes that override struct type
+        if let Some(attrs) = &self.attrs {
+            match &attrs.with {
+                // Override self.ty for scalar, enumeration properties
+                None if attrs.scalar || attrs.enumeration => {
+                    return quote! { ProtoConvertScalar::from_scalar };
+                }
+                // Override implementation for with module  scalar
+                Some(with) if attrs.scalar || attrs.enumeration || self.ty.is_scalar() => {
+                    return quote! { #with::from_scalar };
+                }
+                // Override implementation for with module  non scalar
+                Some(with) => {
+                    return quote! { #with::from_proto };
+                }
+                // For all other possibly invalid combinations proceed to defaults (consult self.ty)
+                _ => {}
+            };
+        }
+
+        if self.ty.is_scalar() {
+            quote! { ProtoConvertScalar::from_scalar }
+        } else {
+            quote! { ProtoConvert::from_proto }
+        }
+    }
+
+    pub fn determine_has_value_method(&self, proto_field: &Ident) -> TokenStream {
+        // First consult field attributes that override struct type
+        if let Some(attrs) = &self.attrs {
+            // Override has_value for scalar and enumeration types
+            if attrs.enumeration || attrs.scalar {
+                return quote! { ProtoScalar::has_value(&value) };
+            }
+        }
+
+        if self.ty.is_scalar() {
+            quote! {ProtoScalar::has_value(&value) }
+        } else {
+            let has_field = format_ident!("has_{}", proto_field);
+            quote! { proto.#has_field() }
+        }
+    }
+
     // TODO use struct attrs for rename_all
+    // TODO use struct attrs for with, scalar, enumeration
     pub(crate) fn implement_setter(&self, _struct_attrs: &StructAttrs) -> TokenStream {
         let struct_field = &self.name;
 
@@ -106,37 +177,19 @@ impl StructField {
             struct_field.clone() // Here proto and struct field are the same
         };
 
-        let from_proto_method = if self.ty.is_scalar() {
-            quote! { ProtoConvertScalar::from_scalar }
-        } else {
-            quote! { ProtoConvert::from_proto }
-        };
+        let from_proto_method = self.determine_from_proto_method();
 
         let proto_field_getter = format_ident!("{}", proto_field);
 
         if self.ty.is_optional() {
             // Determine the appropriate has_value method
-            let has_value_check = match self.ty {
-                Ty::Scalar {
-                    ty: ScalarType::Enumeration,
-                    ..
-                } => quote! {
-                    ProtoScalar::has_value(&value.value())
-                },
-                Ty::Scalar { .. } => quote! {
-                    ProtoScalar::has_value(&value)
-                },
-                Ty::Other { .. } => {
-                    let has_field = format_ident!("has_{}", proto_field);
-                    quote! { proto.#has_field() }
-                }
-            };
+            let has_value_method = self.determine_has_value_method(&proto_field);
 
-            // In case of optional check value is empty via `ProtoPrimitiveValue::has_value(..)`
+            // In case of optional check value is empty via `has_value_method`
             quote! {
                 #struct_field: {
                     let value = proto.#proto_field_getter().to_owned();
-                    if #has_value_check {
+                    if #has_value_method {
                         Some(#from_proto_method(value)?)
                     } else {
                         None
@@ -241,7 +294,21 @@ pub(crate) struct FieldAttrs {
     /// Optional mark the field as an enumeration mapping (used only for optional getter/setter mapping).
     pub enumeration: bool,
     /// Optional module with implementation of override mappings (implementation depends on scalar, enumeration or other proto destination type)
-    pub with: Option<String>,
+    pub with: Option<Path>,
     /// Optional renaming of a single struct field before mapping to the proto entity.
     pub rename: Option<String>,
+}
+
+impl FieldAttrs {
+    pub(crate) fn try_from_meta(meta: &syn::Meta) -> darling::Result<Self> {
+        let attrs = FieldAttrs::from_meta(meta)?;
+        attrs.validate()
+    }
+
+    fn validate(self) -> darling::Result<Self> {
+        if self.enumeration && self.scalar {
+            return Err(darling::Error::unsupported_shape("Struct attributes `enumeration` and `scalar` are mutually excluded (use only one of them)"));
+        }
+        Ok(self)
+    }
 }

@@ -156,3 +156,83 @@ fn implement_struct_rename_attributes_test() {
     let actual = s.implement_proto_convert();
     assert_tokens_eq(&expected, &actual);
 }
+
+#[test]
+fn implement_struct_scalars_with_attribute_overrides_test() {
+    let fragment = quote! {
+        #[proto_convert(source = "proto::Test")]
+        struct Test {
+            // Map Uuid as scalar string
+            #[proto_convert(scalar, with="uuid_as_string")]
+            field_1: Uuid,
+            // Map Option Uuid as scalar bytes
+            #[proto_convert(scalar, with="uuid_as_bytes")]
+            field_2: Option<Uuid>,
+            // An already scalar type marked as scalar behaves the same
+            #[proto_convert(scalar)]
+            field_3: u32,
+            // An already optional scalar type marked as scalar behaves the same
+            #[proto_convert(scalar)]
+            field_4: Option<u32>,
+        }
+    };
+
+    let input = syn::parse2::<DeriveInput>(fragment.into()).unwrap();
+
+    let s = from_derive_input_struct(&input).unwrap();
+
+    let expected = quote! {
+        impl ProtoConvert for Test {
+            type ProtoStruct = proto::Test;
+            fn to_proto(&self) -> Self::ProtoStruct {
+                let mut proto = proto::Test::default();
+
+                proto.set_field_1(uuid_as_string::to_scalar(&self.field_1).into());
+
+                if let Some(value) = &self.field_2 {
+                    proto.set_field_2(uuid_as_bytes::to_scalar(value).into());
+                }
+
+                proto.set_field_3(ProtoConvertScalar::to_scalar(&self.field_3).into());
+
+                if let Some(value) = &self.field_4 {
+                    proto.set_field_4(ProtoConvertScalar::to_scalar(value).into());
+                }
+                proto
+            }
+
+            fn from_proto(proto: Self::ProtoStruct) -> std::result::Result<Self, anyhow::Error> {
+                let inner = Self {
+                    field_1: uuid_as_string::from_scalar(proto.field_1().to_owned())?,
+                    field_2: {
+                        let value = proto.field_2().to_owned();
+                        if ProtoScalar::has_value(&value) {
+                            Some(uuid_as_bytes::from_scalar(value)?)
+                        } else {
+                            None
+                        }
+                    },
+                    field_3: ProtoConvertScalar::from_scalar(proto.field_3().to_owned())?,
+                    field_4: {
+                        let value = proto.field_4().to_owned();
+                        if ProtoScalar::has_value(&value) {
+                            Some(ProtoConvertScalar::from_scalar(value)?)
+                        } else {
+                            None
+                        }
+                    },
+                };
+                Ok(inner)
+            }
+        }
+    };
+
+    let actual = s.implement_proto_convert();
+    assert_tokens_eq(&expected, &actual);
+}
+
+#[test]
+fn implement_struct_enumerations_with_attribute_overrides_test() {}
+
+#[test]
+fn implement_struct_with_attribute_overrides_test() {}

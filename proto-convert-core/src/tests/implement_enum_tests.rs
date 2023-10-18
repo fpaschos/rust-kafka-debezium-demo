@@ -1,7 +1,7 @@
-use crate::tests::{assert_tokens_eq, from_derive_input_enum};
-use darling::FromMeta;
 use quote::quote;
-use syn::{parse_quote, Attribute, DeriveInput, Meta, Path};
+use syn::DeriveInput;
+
+use crate::tests::{assert_tokens_eq, from_derive_input_enum};
 
 #[test]
 fn implement_enumeration_test() {
