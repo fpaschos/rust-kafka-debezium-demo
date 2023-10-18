@@ -9,13 +9,14 @@ edition = "2021"
 [dependencies]
 proto-convert-derive = { path = "../proto-convert-derive" }
 anyhow = "1.0.75"
+uuid = { version = "1.4.1", features = ["v4"] }
+chrono = "0.4.31"
 
 
 
 [dev-dependencies]
 protobuf = "3.3.0"
-chrono = "0.4.31"
-uuid = { version = "1.4.1", features = ["v4"] }
+
 
 [build-dependencies]
 protobuf-codegen = "3.3.0"

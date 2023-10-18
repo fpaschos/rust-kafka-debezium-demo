@@ -1,4 +1,4 @@
-use proto_convert::{derive::ProtoConvert, ProtoConvert};
+use proto_convert::{derive::ProtoConvert, ProtoConvert, ProtoConvertScalar, ProtoScalar};
 mod proto;
 #[derive(Debug, ProtoConvert, Eq, PartialEq, Default)]
 #[proto_convert(source = "proto::Entity")]

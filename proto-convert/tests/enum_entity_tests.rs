@@ -1,5 +1,5 @@
 use anyhow::Error;
-use proto_convert::{derive::ProtoConvert, ProtoConvert};
+use proto_convert::{derive::ProtoConvert, ProtoConvert, ProtoConvertScalar};
 
 mod proto;
 #[derive(Debug, Clone, ProtoConvert, PartialEq)]
@@ -18,6 +18,7 @@ struct NestedEntity {
     pub first: Entity,
     pub second: Entity,
 }
+
 #[derive(Debug, ProtoConvert, PartialEq)]
 #[proto_convert(
     source = "proto::HierarchyEntity",
@@ -92,6 +93,7 @@ fn hierarchy_entity_round_trips() {
     assert_eq!(tested, original);
 }
 
+// TODO move to manual_implementation_tests
 // Just for reference purposes implement the interface manually
 #[derive(Debug, PartialEq)]
 enum HierarchyEntityManual {
@@ -100,9 +102,8 @@ enum HierarchyEntityManual {
 }
 impl ProtoConvert for HierarchyEntityManual {
     type ProtoStruct = proto::HierarchyEntity;
-
-    fn to_proto(&self) -> Self::ProtoStruct {
-        let mut inner = Self::ProtoStruct::new();
+    fn to_proto(&self) -> proto::HierarchyEntity {
+        let mut inner = proto::HierarchyEntity::default();
         match self {
             HierarchyEntityManual::FirstEntity(value) => inner.set_first_entity(value.to_proto()),
             HierarchyEntityManual::SecondEntity(value) => inner.set_second_entity(value.to_proto()),
@@ -110,7 +111,7 @@ impl ProtoConvert for HierarchyEntityManual {
         inner
     }
 
-    fn from_proto(proto: Self::ProtoStruct) -> Result<Self, Error> {
+    fn from_proto(proto: proto::HierarchyEntity) -> Result<Self, Error> {
         match proto.data {
             Some(proto::hierarchy_entity::Data::FirstEntity(v)) => {
                 Entity::from_proto(v).map(HierarchyEntityManual::FirstEntity)
