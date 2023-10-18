@@ -234,10 +234,14 @@ pub(crate) struct StructAttrs {
 #[derive(Debug, darling::FromMeta, Default)]
 #[darling(default)]
 pub(crate) struct FieldAttrs {
-    /// Optional skipping struct field from proto serialization
+    /// Optional skipping struct field from proto serialization.
     pub skip: bool,
-    /// Optional mark the field as an enumeration mapping (used only for optional getter/setter mapping)
+    /// Optional mark the field as an scalar type mapping.
+    pub scalar: bool,
+    /// Optional mark the field as an enumeration mapping (used only for optional getter/setter mapping).
     pub enumeration: bool,
+    /// Optional module with implementation of override mappings (implementation depends on scalar, enumeration or other proto destination type)
+    pub with: Option<String>,
     /// Optional renaming of a single struct field before mapping to the proto entity.
     pub rename: Option<String>,
 }

@@ -1,6 +1,5 @@
 use proto_convert::{ProtoConvert, ProtoConvertScalar, ProtoScalar};
 use protobuf::Enum;
-use uuid::Uuid;
 
 /// Fully expanded and manual experiments (these used to build the macros and the library traits synergy)
 mod proto;
@@ -166,43 +165,50 @@ impl ProtoConvert for EntityWithOptionals {
 }
 
 // Example of manual implementation for uuid to primitive
-
-#[derive(Debug, PartialEq)]
-pub struct EntityUuids {
-    uuid_str: Uuid,
-    opt_uuid_str: Option<Uuid>,
-    // uuid_3: Uuid,
-    // uuid_4: Option<Uuid>,
-}
-
-impl ProtoConvert for EntityUuids {
-    type ProtoStruct = proto::EntityUuids;
-    fn to_proto(&self) -> Self::ProtoStruct {
-        let mut proto = proto::EntityUuids::default();
-        proto.set_uuid_str(ProtoConvertScalar::to_scalar(&self.uuid_str));
-
-        // Only if there is value other default
-        if let Some(value) = &self.opt_uuid_str {
-            proto.set_opt_uuid_str(ProtoConvertScalar::to_scalar(value));
-        }
-
-        proto
-    }
-    fn from_proto(proto: Self::ProtoStruct) -> Result<Self, anyhow::Error> {
-        let inner = Self {
-            uuid_str: ProtoConvertScalar::from_scalar(proto.uuid_str().to_owned())?,
-            opt_uuid_str: {
-                let v = proto.opt_uuid_str().to_owned();
-                if ProtoScalar::has_value(&v) {
-                    Some(ProtoConvertScalar::from_scalar(v)?)
-                } else {
-                    None
-                }
-            },
-        };
-        Ok(inner)
-    }
-}
+// impl ProtoConvertScalar<String> for Uuid {
+//     fn to_scalar(&self) -> String {
+//         self.to_string()
+//     }
+//
+//     fn from_scalar(proto: String) -> Result<Self, anyhow::Error> {
+//         let res = Uuid::from_str(&proto)?;
+//         Ok(res)
+//     }
+// }
+// #[derive(Debug, PartialEq)]
+// pub struct EntityUuids {
+//     uuid_str: Uuid,
+//     opt_uuid_str: Option<Uuid>,
+// }
+//
+// impl ProtoConvert for EntityUuids {
+//     type ProtoStruct = proto::EntityUuids;
+//     fn to_proto(&self) -> Self::ProtoStruct {
+//         let mut proto = proto::EntityUuids::default();
+//         proto.set_uuid_str(ProtoConvertScalar::to_scalar(&self.uuid_str));
+//
+//         // Only if there is value other default
+//         if let Some(value) = &self.opt_uuid_str {
+//             proto.set_opt_uuid_str(ProtoConvertScalar::to_scalar(value));
+//         }
+//
+//         proto
+//     }
+//     fn from_proto(proto: Self::ProtoStruct) -> Result<Self, anyhow::Error> {
+//         let inner = Self {
+//             uuid_str: ProtoConvertScalar::from_scalar(proto.uuid_str().to_owned())?,
+//             opt_uuid_str: {
+//                 let v = proto.opt_uuid_str().to_owned();
+//                 if ProtoScalar::has_value(&v) {
+//                     Some(ProtoConvertScalar::from_scalar(v)?)
+//                 } else {
+//                     None
+//                 }
+//             },
+//         };
+//         Ok(inner)
+//     }
+// }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct NestedEntity {
@@ -289,28 +295,28 @@ fn test_entity_with_optionals_round_trips() {
     assert_eq!(tested, original);
 }
 
-#[test]
-fn test_entity_uuids_round_trips() {
-    // Test with value
-    let original = EntityUuids {
-        uuid_str: Uuid::new_v4(),
-        opt_uuid_str: Some(Uuid::new_v4()),
-    };
-
-    let p = original.to_proto();
-    let tested = EntityUuids::from_proto(p).unwrap();
-    assert_eq!(tested, original);
-
-    // Test with none
-    let original = EntityUuids {
-        uuid_str: Uuid::new_v4(),
-        opt_uuid_str: None,
-    };
-
-    let p = original.to_proto();
-    let tested = EntityUuids::from_proto(p).unwrap();
-    assert_eq!(tested, original);
-}
+// #[test]
+// fn test_entity_uuids_round_trips() {
+//     // Test with value
+//     let original = EntityUuids {
+//         uuid_str: Uuid::new_v4(),
+//         opt_uuid_str: Some(Uuid::new_v4()),
+//     };
+//
+//     let p = original.to_proto();
+//     let tested = EntityUuids::from_proto(p).unwrap();
+//     assert_eq!(tested, original);
+//
+//     // Test with none
+//     let original = EntityUuids {
+//         uuid_str: Uuid::new_v4(),
+//         opt_uuid_str: None,
+//     };
+//
+//     let p = original.to_proto();
+//     let tested = EntityUuids::from_proto(p).unwrap();
+//     assert_eq!(tested, original);
+// }
 
 #[test]
 fn nested_entity_test_round_trips() {

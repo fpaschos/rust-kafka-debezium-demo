@@ -1,6 +1,4 @@
 use anyhow::Error;
-use std::str::FromStr;
-use uuid::Uuid;
 
 pub trait ProtoScalar: Sized + private::Sealed {
     fn has_value(&self) -> bool;
@@ -19,17 +17,40 @@ mod private {
     impl Sealed for String {}
     impl Sealed for Vec<u8> {}
 }
-impl ProtoScalar for u32 {
-    fn has_value(&self) -> bool {
-        *self != 0
-    }
+
+pub trait ProtoConvertScalar<P: ProtoScalar>: Sized {
+    /// Converts a reference of [`Self`] to a [`ProtoScalar`]
+    fn to_scalar(&self) -> P;
+
+    /// Consumes a [`ProtoScalar`] and returns a [`Self`] or error in the conversion failed
+    fn from_scalar(proto: P) -> Result<Self, anyhow::Error>;
 }
 
-impl ProtoScalar for i32 {
-    fn has_value(&self) -> bool {
-        *self != 0
-    }
+pub trait ProtoConvert
+where
+    Self: Sized,
+{
+    type ProtoStruct;
+    /// Converts a reference of [`Self`] struct to proto [`Self::ProtoStruct`]
+    fn to_proto(&self) -> Self::ProtoStruct;
+
+    /// Consumes a proto [`Self::ProtoStruct`] and returns a [`Self`] struct or error in the conversion failed
+    fn from_proto(proto: Self::ProtoStruct) -> Result<Self, anyhow::Error>;
 }
+
+macro_rules! impl_proto_scalar {
+    ( $( $name:tt ),* )=> {
+        $(
+            impl ProtoScalar for $name {
+                fn has_value(&self) -> bool {
+                    *self != 0 as $name
+                }
+            }
+        )*
+    };
+}
+
+impl_proto_scalar! { u32, u64, i32, i64, f32, f64}
 
 impl ProtoScalar for bool {
     fn has_value(&self) -> bool {
@@ -49,65 +70,22 @@ impl ProtoScalar for Vec<u8> {
     }
 }
 
-impl ProtoScalar for f32 {
-    fn has_value(&self) -> bool {
-        *self != 0f32
-    }
+macro_rules! impl_proto_convert_scalar {
+    ( $( $name:tt ),* )=> {
+        $(
+            impl ProtoConvertScalar<$name> for $name {
+                fn to_scalar(&self) -> $name {
+                    *self
+                }
+                fn from_scalar(proto: $name) -> Result<Self, Error> {
+                    Ok(proto)
+                }
+            }
+        )*
+    };
 }
 
-impl ProtoScalar for f64 {
-    fn has_value(&self) -> bool {
-        *self != 0f64
-    }
-}
-
-pub trait ProtoConvertScalar<P: ProtoScalar>: Sized {
-    fn to_scalar(&self) -> P;
-
-    fn from_scalar(proto: P) -> Result<Self, anyhow::Error>;
-}
-
-pub trait ProtoConvert
-where
-    Self: Sized,
-{
-    type ProtoStruct;
-    /// Converts a reference of [`Self`] struct to proto [`Self::ProtoStruct`]
-    fn to_proto(&self) -> Self::ProtoStruct;
-
-    /// Consumes a proto [`Self::ProtoStruct`] and returns a [`Self`] struct
-    fn from_proto(proto: Self::ProtoStruct) -> Result<Self, anyhow::Error>;
-}
-
-impl ProtoConvertScalar<u32> for u32 {
-    fn to_scalar(&self) -> u32 {
-        *self
-    }
-
-    fn from_scalar(proto: u32) -> Result<Self, Error> {
-        Ok(proto)
-    }
-}
-
-impl ProtoConvertScalar<i32> for i32 {
-    fn to_scalar(&self) -> i32 {
-        *self
-    }
-
-    fn from_scalar(proto: i32) -> Result<Self, Error> {
-        Ok(proto)
-    }
-}
-
-impl ProtoConvertScalar<bool> for bool {
-    fn to_scalar(&self) -> bool {
-        *self
-    }
-
-    fn from_scalar(proto: bool) -> Result<Self, Error> {
-        Ok(proto)
-    }
-}
+impl_proto_convert_scalar! { bool, u32, u64, i32, i64, f32, f64 }
 
 impl ProtoConvertScalar<String> for String {
     fn to_scalar(&self) -> String {
@@ -119,26 +97,12 @@ impl ProtoConvertScalar<String> for String {
     }
 }
 
-impl ProtoConvertScalar<String> for Uuid {
-    fn to_scalar(&self) -> String {
-        self.to_string()
-    }
-
-    fn from_scalar(proto: String) -> Result<Self, Error> {
-        let res = Uuid::from_str(&proto)?;
-        Ok(res)
-    }
-}
-
-// Implementation from https://stackoverflow.com/questions/65268226/rust-deserialization-converting-vector-of-bytes-to-hashset-of-uuid
-impl ProtoConvertScalar<Vec<u8>> for Uuid {
+impl ProtoConvertScalar<Vec<u8>> for Vec<u8> {
     fn to_scalar(&self) -> Vec<u8> {
-        let mut res = Vec::with_capacity(16);
-        res.extend_from_slice(self.as_bytes());
-        res
+        self.clone()
     }
 
     fn from_scalar(proto: Vec<u8>) -> Result<Self, Error> {
-        Ok(Uuid::from_slice(&proto)?)
+        Ok(proto)
     }
 }
