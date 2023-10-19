@@ -3,6 +3,7 @@ use std::io::Write;
 use std::path::Path;
 
 fn main() {
+    // Generate protobuf crate proto rust code
     let out_dir = std::env::var("OUT_DIR").expect("Unable to get OUT_DIR");
 
     protobuf_codegen::Codegen::new()
@@ -12,17 +13,19 @@ fn main() {
         .input("tests/proto/timestamps.proto")
         .include("tests/proto")
         .customize(
-            protobuf_codegen::Customize::default()
-                .generate_accessors(true)
-                .gen_mod_rs(true),
+            protobuf_codegen::Customize::default().generate_accessors(true), // .gen_mod_rs(true),
         )
         .run_from_script();
+
+    // Generate prost crate proto rust code
+    prost_build::compile_protos(&["tests/proto/entities.proto"], &["/tests"]).unwrap();
+
+    // Override the mod file to include all the generated protos
     let mod_file_content = r#"//@generated
-mod entities;
-mod timestamps;
-pub use self::entities::*; 
-pub use self::timestamps::*;
-"#;
+    pub mod entities;
+    pub mod timestamps;
+    // pub mod entities.schema;
+    "#;
     let mod_file_path = Path::new(&out_dir).join("mod.rs");
 
     let mut file = fs::File::create(mod_file_path).expect("Unable to create mod.rs file");

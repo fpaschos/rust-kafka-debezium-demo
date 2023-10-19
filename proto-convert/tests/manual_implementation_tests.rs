@@ -13,20 +13,20 @@ enum EntityStatus {
 
 // Example of manual implementation for enumeration to primitive
 impl ProtoConvert for EntityStatus {
-    type ProtoStruct = proto::EntityStatus;
+    type ProtoStruct = proto::protobuf::EntityStatus;
     fn to_proto(&self) -> Self::ProtoStruct {
         match self {
-            Self::StatusA => proto::EntityStatus::STATUS_A,
-            Self::StatusB => proto::EntityStatus::STATUS_B,
-            Self::StatusC => proto::EntityStatus::STATUS_C,
+            Self::StatusA => proto::protobuf::EntityStatus::STATUS_A,
+            Self::StatusB => proto::protobuf::EntityStatus::STATUS_B,
+            Self::StatusC => proto::protobuf::EntityStatus::STATUS_C,
         }
     }
 
     fn from_proto(proto: Self::ProtoStruct) -> Result<Self, anyhow::Error> {
         match proto {
-            proto::EntityStatus::STATUS_A => Ok(Self::StatusA),
-            proto::EntityStatus::STATUS_B => Ok(Self::StatusB),
-            proto::EntityStatus::STATUS_C => Ok(Self::StatusC),
+            proto::protobuf::EntityStatus::STATUS_A => Ok(Self::StatusA),
+            proto::protobuf::EntityStatus::STATUS_B => Ok(Self::StatusB),
+            proto::protobuf::EntityStatus::STATUS_C => Ok(Self::StatusC),
         }
     }
 }
@@ -41,9 +41,9 @@ struct Entity {
 }
 
 impl ProtoConvert for Entity {
-    type ProtoStruct = proto::Entity;
+    type ProtoStruct = proto::protobuf::Entity;
     fn to_proto(&self) -> Self::ProtoStruct {
-        let mut proto = proto::Entity::default();
+        let mut proto = proto::protobuf::Entity::default();
         proto.set_id(ProtoConvertScalar::to_scalar(&self.id));
         proto.set_nonce(ProtoConvertScalar::to_scalar(&self.nonce));
         proto.set_valid(ProtoConvertScalar::to_scalar(&self.valid));
@@ -79,9 +79,9 @@ struct EntityWithOptionals {
 }
 
 impl ProtoConvert for EntityWithOptionals {
-    type ProtoStruct = proto::EntityWithOptionals;
+    type ProtoStruct = proto::protobuf::EntityWithOptionals;
     fn to_proto(&self) -> Self::ProtoStruct {
-        let mut proto = proto::EntityWithOptionals::default();
+        let mut proto = proto::protobuf::EntityWithOptionals::default();
         proto.set_id(ProtoConvertScalar::to_scalar(&self.id));
         proto.set_nonce(ProtoConvertScalar::to_scalar(&self.nonce));
         proto.set_valid(ProtoConvertScalar::to_scalar(&self.valid));
@@ -163,53 +163,6 @@ impl ProtoConvert for EntityWithOptionals {
         Ok(inner)
     }
 }
-
-// Example of manual implementation for uuid to primitive
-// impl ProtoConvertScalar<String> for Uuid {
-//     fn to_scalar(&self) -> String {
-//         self.to_string()
-//     }
-//
-//     fn from_scalar(proto: String) -> Result<Self, anyhow::Error> {
-//         let res = Uuid::from_str(&proto)?;
-//         Ok(res)
-//     }
-// }
-// #[derive(Debug, PartialEq)]
-// pub struct EntityUuids {
-//     uuid_str: Uuid,
-//     opt_uuid_str: Option<Uuid>,
-// }
-//
-// impl ProtoConvert for EntityUuids {
-//     type ProtoStruct = proto::EntityUuids;
-//     fn to_proto(&self) -> Self::ProtoStruct {
-//         let mut proto = proto::EntityUuids::default();
-//         proto.set_uuid_str(ProtoConvertScalar::to_scalar(&self.uuid_str));
-//
-//         // Only if there is value other default
-//         if let Some(value) = &self.opt_uuid_str {
-//             proto.set_opt_uuid_str(ProtoConvertScalar::to_scalar(value));
-//         }
-//
-//         proto
-//     }
-//     fn from_proto(proto: Self::ProtoStruct) -> Result<Self, anyhow::Error> {
-//         let inner = Self {
-//             uuid_str: ProtoConvertScalar::from_scalar(proto.uuid_str().to_owned())?,
-//             opt_uuid_str: {
-//                 let v = proto.opt_uuid_str().to_owned();
-//                 if ProtoScalar::has_value(&v) {
-//                     Some(ProtoConvertScalar::from_scalar(v)?)
-//                 } else {
-//                     None
-//                 }
-//             },
-//         };
-//         Ok(inner)
-//     }
-// }
-
 #[derive(Debug, Clone, PartialEq)]
 pub struct NestedEntity {
     first: Entity,
@@ -217,9 +170,9 @@ pub struct NestedEntity {
 }
 
 impl ProtoConvert for NestedEntity {
-    type ProtoStruct = proto::NestedEntity;
+    type ProtoStruct = proto::protobuf::NestedEntity;
     fn to_proto(&self) -> Self::ProtoStruct {
-        let mut proto = proto::NestedEntity::default();
+        let mut proto = proto::protobuf::NestedEntity::default();
         proto.set_first(ProtoConvert::to_proto(&self.first).into());
         // Only if there is value other default
         if let Some(value) = &self.second {

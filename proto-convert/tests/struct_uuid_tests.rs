@@ -4,7 +4,7 @@ use uuid::Uuid;
 
 mod proto;
 #[derive(Debug, ProtoConvert, Eq, PartialEq)]
-#[proto_convert(source = "proto::EntityUuids")]
+#[proto_convert(source = "proto::protobuf::EntityUuids")]
 struct EntityUuids {
     #[proto_convert(scalar, with = "uuid_as_string")]
     uuid_str: Uuid,
@@ -33,7 +33,7 @@ fn entity_round_trip() {
 
 #[test]
 fn proto_entity_round_trip() {
-    let original = proto::EntityUuids {
+    let original = proto::protobuf::EntityUuids {
         uuid_str: Uuid::new_v4().to_string(),
         opt_uuid_str: Uuid::new_v4().to_string(),
         uuid_bytes: Uuid::new_v4().as_bytes().to_vec(),
@@ -67,7 +67,7 @@ fn entity_optional_missing_round_trip() {
 
 #[test]
 fn proto_entity_optional_missing_round_trip() {
-    let original = proto::EntityUuids {
+    let original = proto::protobuf::EntityUuids {
         uuid_str: Uuid::new_v4().to_string(),
         uuid_bytes: Uuid::new_v4().as_bytes().to_vec(),
         ..Default::default()

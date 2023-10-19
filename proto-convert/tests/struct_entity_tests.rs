@@ -4,7 +4,7 @@ use std::default::Default;
 mod proto;
 
 #[derive(Debug, ProtoConvert, Eq, PartialEq)]
-#[proto_convert(source = "proto::Entity")]
+#[proto_convert(source = "proto::protobuf::Entity")]
 struct Entity {
     pub id: u32,
     pub nonce: i32,
@@ -29,7 +29,7 @@ fn entity_round_trip() {
 
 #[test]
 fn proto_entity_round_trip() {
-    let original = proto::Entity {
+    let original = proto::protobuf::Entity {
         id: 1,
         nonce: 10,
         name: "Foo".to_string(),

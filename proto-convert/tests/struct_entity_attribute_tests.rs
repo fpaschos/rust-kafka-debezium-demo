@@ -5,7 +5,7 @@ mod proto;
 
 #[derive(Debug, Clone, Copy, Eq, PartialEq, ProtoConvert)]
 #[proto_convert(
-    source = "proto::EntityStatus",
+    source = "proto::protobuf::EntityStatus",
     enumeration,
     rename_variants = "STREAMING_SNAKE_CASE"
 )]
@@ -17,7 +17,7 @@ pub enum EntityStatus {
 
 #[derive(Debug, Clone, Copy, Eq, PartialEq, ProtoConvert)]
 #[proto_convert(
-    source = "proto::EntityType",
+    source = "proto::protobuf::EntityType",
     enumeration,
     rename_variants = "STREAMING_SNAKE_CASE"
 )]
@@ -28,7 +28,7 @@ pub enum EntityType {
 }
 
 #[derive(Debug, ProtoConvert, Eq, PartialEq)]
-#[proto_convert(source = "proto::Entity")]
+#[proto_convert(source = "proto::protobuf::Entity")]
 struct Entity {
     pub id: u32,
     pub nonce: i32,
@@ -60,7 +60,7 @@ fn entity_round_trip() {
 
 #[test]
 fn proto_entity_round_trip() {
-    let mut original = proto::Entity {
+    let mut original = proto::protobuf::Entity {
         id: 1,
         nonce: 10,
         name: "Foo".to_string(),

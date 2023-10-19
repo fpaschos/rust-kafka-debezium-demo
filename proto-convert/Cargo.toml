@@ -18,5 +18,8 @@ chrono = "0.4.31"
 protobuf = "3.3.0"
 
 
+
 [build-dependencies]
 protobuf-codegen = "3.3.0"
+prost-build = "0.12.1"
+

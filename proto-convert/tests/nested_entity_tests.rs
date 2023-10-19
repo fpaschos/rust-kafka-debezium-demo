@@ -4,7 +4,7 @@ use proto_convert::{ProtoConvert, ProtoConvertScalar};
 mod proto;
 
 #[derive(Debug, Clone, ProtoConvert, Eq, PartialEq)]
-#[proto_convert(source = "proto::Entity")]
+#[proto_convert(source = "proto::protobuf::Entity")]
 struct Entity {
     pub id: u32,
     pub nonce: i32,
@@ -13,7 +13,7 @@ struct Entity {
 }
 
 #[derive(Debug, ProtoConvert, Eq, PartialEq)]
-#[proto_convert(source = "proto::NestedEntity")]
+#[proto_convert(source = "proto::protobuf::NestedEntity")]
 struct NestedEntity {
     pub first: Entity,
     pub second: Entity,

@@ -1,7 +1,8 @@
 use proto_convert::{derive::ProtoConvert, ProtoConvert, ProtoConvertScalar, ProtoScalar};
 mod proto;
+
 #[derive(Debug, ProtoConvert, Eq, PartialEq, Default)]
-#[proto_convert(source = "proto::Entity")]
+#[proto_convert(source = "proto::protobuf::Entity")]
 struct Entity {
     pub id: Option<u32>,
     pub nonce: Option<i32>,
@@ -21,7 +22,7 @@ fn default_entity_round_trip() {
 
 #[test]
 fn default_proto_entity_round_trip() {
-    let original = proto::Entity::default();
+    let original = proto::protobuf::Entity::default();
 
     let e = Entity::from_proto(original.clone()).unwrap();
     let tested = e.to_proto();
@@ -49,7 +50,7 @@ fn filled_entity_round_trip() {
 fn filled_proto_entity_round_trip() {
     // LIMITATION NOTE that false , empty string and zeros and IN GENERAL default values  deserialize (from_proto) to None
     // That means that if you want to discriminate between absence of value and default you should not choose an option.
-    let original = proto::Entity {
+    let original = proto::protobuf::Entity {
         id: 100,
         nonce: 100,
         valid: true,

@@ -3,7 +3,7 @@ use proto_convert::{derive::ProtoConvert, ProtoConvert, ProtoConvertScalar};
 
 mod proto;
 #[derive(Debug, Clone, ProtoConvert, PartialEq)]
-#[proto_convert(source = "proto::Entity")]
+#[proto_convert(source = "proto::protobuf::Entity")]
 struct Entity {
     pub id: u32,
     pub nonce: i32,
@@ -13,7 +13,7 @@ struct Entity {
 }
 
 #[derive(Debug, ProtoConvert, PartialEq)]
-#[proto_convert(source = "proto::NestedEntity")]
+#[proto_convert(source = "proto::protobuf::NestedEntity")]
 struct NestedEntity {
     pub first: Entity,
     pub second: Entity,
@@ -21,7 +21,7 @@ struct NestedEntity {
 
 #[derive(Debug, ProtoConvert, PartialEq)]
 #[proto_convert(
-    source = "proto::HierarchyEntity",
+    source = "proto::protobuf::HierarchyEntity",
     one_of(field = "data"),
     rename_variants = "snake_case"
 )]
@@ -32,7 +32,7 @@ enum HierarchyEntity {
 
 #[derive(Debug, Clone, Copy, PartialEq, ProtoConvert)]
 #[proto_convert(
-    source = "proto::EntityStatus",
+    source = "proto::protobuf::EntityStatus",
     enumeration,
     rename_variants = "STREAMING_SNAKE_CASE"
 )]
@@ -101,9 +101,9 @@ enum HierarchyEntityManual {
     SecondEntity(NestedEntity),
 }
 impl ProtoConvert for HierarchyEntityManual {
-    type ProtoStruct = proto::HierarchyEntity;
-    fn to_proto(&self) -> proto::HierarchyEntity {
-        let mut inner = proto::HierarchyEntity::default();
+    type ProtoStruct = proto::protobuf::HierarchyEntity;
+    fn to_proto(&self) -> proto::protobuf::HierarchyEntity {
+        let mut inner = proto::protobuf::HierarchyEntity::default();
         match self {
             HierarchyEntityManual::FirstEntity(value) => inner.set_first_entity(value.to_proto()),
             HierarchyEntityManual::SecondEntity(value) => inner.set_second_entity(value.to_proto()),
@@ -111,12 +111,12 @@ impl ProtoConvert for HierarchyEntityManual {
         inner
     }
 
-    fn from_proto(proto: proto::HierarchyEntity) -> Result<Self, Error> {
+    fn from_proto(proto: proto::protobuf::HierarchyEntity) -> Result<Self, Error> {
         match proto.data {
-            Some(proto::hierarchy_entity::Data::FirstEntity(v)) => {
+            Some(proto::protobuf::hierarchy_entity::Data::FirstEntity(v)) => {
                 Entity::from_proto(v).map(HierarchyEntityManual::FirstEntity)
             }
-            Some(proto::hierarchy_entity::Data::SecondEntity(v)) => {
+            Some(proto::protobuf::hierarchy_entity::Data::SecondEntity(v)) => {
                 NestedEntity::from_proto(v).map(HierarchyEntityManual::SecondEntity)
             }
 
