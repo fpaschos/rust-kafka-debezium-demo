@@ -4,7 +4,7 @@ use tokio::task::JoinHandle;
 use crate::config::AppConfig;
 use claims_core::kafka::proto_consumer;
 use claims_core::tracing::init;
-use claims_model::model::proto::ProtoConvert;
+use claims_model::model::proto::ProtoMap;
 use claims_model::model::{proto, Claim, Party};
 
 mod common;

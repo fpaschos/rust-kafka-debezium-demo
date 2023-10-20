@@ -1,5 +1,5 @@
-use proto_convert::derive::ProtoConvert;
-use proto_convert::{ProtoConvert, ProtoConvertScalar, ProtoScalar};
+use proto_mapper::derive::ProtoMap;
+use proto_mapper::{ProtoMap, ProtoMapScalar, ProtoScalar};
 use serde::{Deserialize, Serialize};
 
 // Re export proto models on feature "proto"
@@ -7,7 +7,7 @@ use serde::{Deserialize, Serialize};
 #[cfg(feature = "proto")]
 pub mod proto {
     pub use claims_schema::proto::*;
-    pub use proto_convert::ProtoConvert;
+    pub use proto_mapper::ProtoMap;
 }
 
 // <editor-fold desc="Claim models">
@@ -21,10 +21,10 @@ pub mod proto {
     feature = "sqlx",
     sqlx(type_name = "VARCHAR", rename_all = "SCREAMING_SNAKE_CASE")
 )]
-#[cfg_attr(feature = "proto", derive(ProtoConvert))]
+#[cfg_attr(feature = "proto", derive(ProtoMap))]
 #[cfg_attr(
     feature = "proto",
-    proto_convert(
+    proto_map(
         source = "proto::claim::ClaimStatus",
         enumeration,
         rename_variants = "STREAMING_SNAKE_CASE"
@@ -48,10 +48,10 @@ pub enum ClaimStatus {
     feature = "sqlx",
     sqlx(type_name = "VARCHAR", rename_all = "SCREAMING_SNAKE_CASE")
 )]
-#[cfg_attr(feature = "proto", derive(ProtoConvert))]
+#[cfg_attr(feature = "proto", derive(ProtoMap))]
 #[cfg_attr(
     feature = "proto",
-    proto_convert(
+    proto_map(
         source = "proto::claim::IncidentType",
         enumeration,
         rename_variants = "STREAMING_SNAKE_CASE"
@@ -66,8 +66,8 @@ pub enum IncidentType {
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "proto", derive(ProtoConvert))]
-#[cfg_attr(feature = "proto", proto_convert(source = "proto::claim::Claim"))]
+#[cfg_attr(feature = "proto", derive(ProtoMap))]
+#[cfg_attr(feature = "proto", proto_map(source = "proto::claim::Claim"))]
 pub struct Claim {
     pub id: i32,
     pub claim_no: String,
@@ -88,10 +88,10 @@ pub struct Claim {
     feature = "sqlx",
     sqlx(type_name = "VARCHAR", rename_all = "SCREAMING_SNAKE_CASE")
 )]
-#[cfg_attr(feature = "proto", derive(ProtoConvert))]
+#[cfg_attr(feature = "proto", derive(ProtoMap))]
 #[cfg_attr(
     feature = "proto",
-    proto_convert(
+    proto_map(
         source = "proto::party::PartyType",
         enumeration,
         rename_variants = "STREAMING_SNAKE_CASE"
@@ -113,10 +113,10 @@ pub enum PartyType {
     feature = "sqlx",
     sqlx(type_name = "VARCHAR", rename_all = "SCREAMING_SNAKE_CASE")
 )]
-#[cfg_attr(feature = "proto", derive(ProtoConvert))]
+#[cfg_attr(feature = "proto", derive(ProtoMap))]
 #[cfg_attr(
     feature = "proto",
-    proto_convert(
+    proto_map(
         source = "proto::party::PartySubtype",
         enumeration,
         rename_variants = "STREAMING_SNAKE_CASE"
@@ -135,12 +135,12 @@ pub enum PartySubtype {
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "proto", derive(ProtoConvert))]
-#[cfg_attr(feature = "proto", proto_convert(source = "proto::party::Party"))]
+#[cfg_attr(feature = "proto", derive(ProtoMap))]
+#[cfg_attr(feature = "proto", proto_map(source = "proto::party::Party"))]
 pub struct Party {
     pub id: i32,
     pub claim_id: i32,
-    #[cfg_attr(feature = "proto", proto_convert(rename = "type_"))]
+    #[cfg_attr(feature = "proto", proto_map(rename = "type_"))]
     pub r#type: PartyType,
     pub subtype: PartySubtype,
     pub data: PartyData,
@@ -149,10 +149,10 @@ pub struct Party {
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 #[serde(tag = "type")]
-#[cfg_attr(feature = "proto", derive(ProtoConvert))]
+#[cfg_attr(feature = "proto", derive(ProtoMap))]
 #[cfg_attr(
     feature = "proto",
-    proto_convert(
+    proto_map(
         source = "proto::party::PartyData",
         one_of(field = "data"),
         rename_variants = "snake_case"
@@ -183,8 +183,8 @@ impl PartyData {
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "proto", derive(ProtoConvert))]
-#[cfg_attr(feature = "proto", proto_convert(source = "proto::party::Person"))]
+#[cfg_attr(feature = "proto", derive(ProtoMap))]
+#[cfg_attr(feature = "proto", proto_map(source = "proto::party::Person"))]
 pub struct Person {
     pub subtype: PartySubtype,
     pub name: String,
@@ -192,8 +192,8 @@ pub struct Person {
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "proto", derive(ProtoConvert))]
-#[cfg_attr(feature = "proto", proto_convert(source = "proto::party::Vehicle"))]
+#[cfg_attr(feature = "proto", derive(ProtoMap))]
+#[cfg_attr(feature = "proto", proto_map(source = "proto::party::Vehicle"))]
 pub struct Vehicle {
     pub subtype: PartySubtype,
     pub reg_no: String,

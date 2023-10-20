@@ -1,7 +1,7 @@
 use crate::{db::entities::ClaimOutboxEventDb, db::events::send_event, db::PostgresTx};
 use claims_core::{proto_encode::encoder::ProtoEncoder, proto_encode::message::MessageKeyPair};
 use claims_model::{
-    model::proto::ProtoConvert,
+    model::proto::ProtoMap,
     model::{Claim, Party},
 };
 use schema_registry_converter::{
