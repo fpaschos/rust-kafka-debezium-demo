@@ -1,5 +1,5 @@
-use proto_mapper::derive::ProtoMap;
-use proto_mapper::{ProtoMap, ProtoMapScalar, ProtoScalar};
+#[cfg(feature = "proto")]
+use proto_mapper::{derive::ProtoMap, ProtoMap, ProtoMapScalar, ProtoScalar};
 use serde::{Deserialize, Serialize};
 
 // Re export proto models on feature "proto"
